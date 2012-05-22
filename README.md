@@ -11,3 +11,6 @@ The prototypes subdirectory contains several quick hacks demonstrating various c
 
 prototypes/hintdownload/ is the example.hs from http://code.haskell.org/hint/devel/examples/
 modified to download and execute Demo.main from http://www.scannedinavian.com/~shae/Demo.hs
+
+prototypes/scottywebexecute/ is examples/basic.hs from https://github.com/xich/scotty/
+modified only slightly to prove to myself that I understand the code.
