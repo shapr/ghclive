@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <title>json clock</title>
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="clock.js"></script>    
+    <!-- <script type="text/javascript" src="haskell.js"></script>  -->
+  </head>
+  <body>
+    <!-- I wouldn't call it pretty, but it does work -->
+    <h1>json clock</h1>
+    <div id="clock">clock div</div>
+
+    <form action="/clock" method="get">
+      <textarea id="output">output goes here</textarea>
+      Expression:<input type="text" id="expr" name="expr">1+1</input><br/>
+      File to load:<input type="text" id="fileurl" name="fileurl">http://www.scannedinavian.com/~shae/Demo.hs</input>
+      <input type="submit" value="submit"/>
+    </form>
+
+    <address>
+      <a href="mailto:shae@ScannedInAvian.com">Shae Matijs Erisson</a>
+    </address>
+  </body>
+</html>
