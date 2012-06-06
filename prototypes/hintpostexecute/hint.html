@@ -2,16 +2,15 @@
   <head>
     <title>json clock</title>
     <script type="text/javascript" src="jquery.js"></script>
-    <script type="text/javascript" src="clock.js"></script>    
-    <!-- <script type="text/javascript" src="haskell.js"></script>  -->
+    <script type="text/javascript" src="haskell.js"></script>
   </head>
   <body>
     <!-- I wouldn't call it pretty, but it does work -->
 
     <form action="/hint" method="get">
-      <textarea id="output">output goes here</textarea>
-      Expression:<input type="text" id="expr" name="expr">1+1</input><br/>
-      File to load:<input type="text" id="fileurl" name="fileurl">http://www.scannedinavian.com/~shae/Demo.hs</input>
+      <textarea id="output">output goes here</textarea><br/>
+      Expression:<input type="text" id="expr" name="expr" value="1+1">1+1</input><br/>
+      File to load:<input type="text" id="fileurl" name="fileurl">http://www.scannedinavian.com/~shae/Demo.hs</input><br/>
       <input type="submit" value="submit"/>
     </form>
 

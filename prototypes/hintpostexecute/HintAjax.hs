@@ -9,15 +9,17 @@ import           Network.Wai.Middleware.RequestLogger
 import           Network.Wai.Middleware.Static
 import qualified Text.Blaze.Html5 as H
 import           Web.Scotty
-import Language.Haskell.Interpreter hiding (get)
-import Network.Curl.Download
+import           Language.Haskell.Interpreter hiding (get)
+import           Network.Curl.Download
 import qualified Data.ByteString as BS
 
-import Control.Concurrent
-import Control.Concurrent.MVar
-import Control.Monad (void, forever, liftM)
-import Control.Monad.Error.Class
-
+import           Control.Concurrent
+import           Control.Concurrent.MVar
+import           Control.Monad (void, forever, liftM)
+import           Control.Monad.Error.Class
+import           Data.Aeson ((.=))
+import qualified Data.Aeson as A
+import qualified Data.Text as ST
 
 main :: IO()
 main = scotty 3000 $ do
@@ -34,7 +36,7 @@ main = scotty 3000 $ do
          t <- liftIO . performHint hint $ runHint e u
          case t of
              Left error -> json $ show error
-             Right string -> json string
+             Right string -> json $ A.object [ST.pack "result" .= string,ST.pack "expr" .= e]
          -- json t
 
 runHint :: String -> String -> InterpreterT IO String

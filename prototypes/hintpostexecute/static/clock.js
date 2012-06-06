@@ -10,4 +10,4 @@ function updateClock(){
 // this is what we need to execute
 // how to hook it to the submit button?
 // how to set the result data in output?
-$.get("/clock",{expr:$('#expr').val(),fileurl:('#fileurl').val());
+// $.get("/clock",{expr:$('#expr').val(),fileurl:('#fileurl').val());

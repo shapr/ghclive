@@ -3,10 +3,10 @@
 
 if (typeof console == "undefined" || typeof console.log == "undefined") var console = { log: function() {} }; 
 
-function evalHs(code, expr, success) {
-    var data = { 'method': 'eval', 'contents': code, 'expr': expr };
+function evalHs(fileurl, expr, success) {
+    var data = { 'method': 'eval', 'fileurl': fileurl, 'expr': expr };
     var call = {
-        'url' : 'http://localhost:3000/clock',
+        'url' : 'http://localhost:3000/hint',
         'data' : data,
         'dataType' : 'jsonp',
         'success' : success
@@ -26,11 +26,11 @@ $(function() {
     $('#expr').focus();
     output();
     $('form').submit(function() {
-        var code = $('#code').val();
+        var fileurl = $('#fileurl').val();
         var expr = $('#expr').val();
         $('#expr').val('');
         output('> ' + expr);
-        evalHs(code, expr, function(result) {
+        evalHs(fileurl, expr, function(result) {
             if (console) {
                 console.log(result);
             }
