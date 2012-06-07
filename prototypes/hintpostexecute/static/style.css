@@ -1,0 +1,17 @@
+  body {
+    font-family: : Georgia;
+  }
+  textarea, input {
+    font-family: monospace;
+    font-size: 13px;
+    width: 50%;
+  }
+  
+  #code {
+    float: left;
+    height: 500px;
+  }
+
+  #output {
+    height: 478px;
+  }
