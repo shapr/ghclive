@@ -3,8 +3,6 @@
 
 if (typeof console == "undefined" || typeof console.log == "undefined") var console = { log: function() {} }; 
 
-$('#fileurl').val('http://www.ScannedInAvian.com/~shae/Demo.hs');
-$('#expr').val('map (+1) [1,3,5]');
 
 function evalHs(fileurl, expr, success) {
     var data = { 'method': 'eval', 'fileurl': fileurl, 'expr': expr };
@@ -53,4 +51,7 @@ $(function() {
         });
         return false;
     });
+    // fill in the default field values
+    $('#fileurl').val('http://www.ScannedInAvian.com/~shae/Demo.hs');
+    $('#expr').val('map (+1) [1,3,5] -- expression, hint enter at the end of this line');
 });
