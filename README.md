@@ -14,3 +14,6 @@ modified to download and execute Demo.main from http://www.scannedinavian.com/~s
 
 prototypes/scottywebexecute/ is examples/basic.hs from https://github.com/xich/scotty/
 modified only slightly to prove to myself that I understand the code.
+
+prototypes/hintdownloadexecute/ is the front end from http://haskell.handcraft.com/
+modified to have scotty and hint as a backend instead of calling tryhaskell.org
