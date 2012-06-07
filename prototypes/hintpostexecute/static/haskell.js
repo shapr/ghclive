@@ -7,7 +7,7 @@ if (typeof console == "undefined" || typeof console.log == "undefined") var cons
 function evalHs(fileurl, expr, success) {
     var data = { 'method': 'eval', 'fileurl': fileurl, 'expr': expr };
     var call = {
-        'url' : 'http://localhost:3000/hint',
+        'url' : '/hint',
         'data' : data,
         'dataType' : 'json',
         'jsonp' : 'pad',
