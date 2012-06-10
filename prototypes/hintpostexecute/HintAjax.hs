@@ -35,7 +35,7 @@ main = scotty 3000 $ do
          e <- param "expr"
          t <- liftIO . performHint hint $ runHint e u
          case t of
-             Left error -> json $ show error
+             Left error -> json $ A.object [ST.pack "result" .= cleanShow error, ST.pack "expr" .= e]
              Right string -> json $ A.object [ST.pack "result" .= string,ST.pack "expr" .= e]
          -- json t
 
@@ -94,3 +94,11 @@ newRun f = do
         act
     return $ Run { vRequest = vRequest }
 
+
+cleanShow    :: InterpreterError -> String
+cleanShow ie = case ie of 
+                 UnknownError e -> ("UnknownError\n" ++ e)
+                 WontCompile es -> unlines $ (map errMsg es)
+                 NotAllowed e -> ("NotAllowed\n" ++ e)
+                 GhcException e -> ("GhcException\n" ++ e)
+                 
