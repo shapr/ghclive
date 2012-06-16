@@ -24,7 +24,7 @@ $(document).ready(function(){
     var console1 = $('<div class="console">');
     $('body').append(console1);
     var controller = console1.console({
-        welcomeMessage:'try 1+1',
+        welcomeMessage:'Enter Haskell expressions to evaluate.',
         promptLabel: "hint> ",
         commandValidate:function(line){
             if (line == "") return false;
@@ -44,4 +44,5 @@ $(document).ready(function(){
         promptHistory:true,
         // welcomeMessage:'Loaded http://www.ScannedInAvian.com/~shae/Demo.hs',
     });
+    controller.promptText('map (+1) [1,2,5]');
 });
