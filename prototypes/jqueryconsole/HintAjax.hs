@@ -26,7 +26,7 @@ main = scotty 3000 $ do
      hint <- liftIO $ newHint
 
      middleware logStdoutDev
-     middleware $ staticRoot "static" -- serves jquery.js and clock.js from static/
+     middleware $ staticRoot "static" --  (noDots >-> addBase "static") -- serves jquery.js and clock.js from static/
 
      get "/" $ file "hint.html"
 

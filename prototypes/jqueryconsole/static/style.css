@@ -9,11 +9,11 @@ textarea, input {
 
 #code {
     float: left;
-    height: 500px;
+    height: 200px;
 }
 
 #output {
-    height: 478px;
+    height: 178px;
 }
 
 div.console { word-wrap: break-word; }
