@@ -1,0 +1,74 @@
+<html>
+  <head>
+    <title>hint evaluator page</title>
+    <link rel="stylesheet" type="text/css" href="style.css" media="screen">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
+    <script type="text/javascript">
+    // handy firebug debugging console
+    if (typeof console == "undefined" || typeof console.log == "undefined") var console = { log: function() {} }; 
+    
+    
+    var GHCi = function (serverURL) {
+        this.server = serverURL;
+    }
+    // Load module, synchronous
+    GHCi.prototype.load = function (fileurl) {
+        this.fileurl = fileurl;
+    }
+    // send for evaluation, synchronous
+    GHCi.prototype.eval = function (expr, success) {
+        console.log('reached eval with ' + expr);
+        var res = null;
+        $.ajax({
+            url: this.server + '/hint',
+            type: 'get',
+            data : { 'expr':expr, 'fileurl': this.fileurl },
+            dataType : 'json',
+            async: false,
+            success: function (data) { res = data; },
+        });
+        return res;
+    }
+    
+    // this is executed when the page is finished loading
+    $(document).ready(function(){
+        ghci = new GHCi('http://c-71-207-252-122.hsd1.al.comcast.net:3000');
+        
+        // add an input element to our form
+        var inputEl = $('<input class="expr" id="expr" type="text" />');
+        $('#ghci').append(inputEl);
+        // hook the input element to submit code to the server
+        $('#ghci').submit(function() {
+            console.log('in the submit function, expr is ' + expr);
+            var expr = $('.expr').filter(":last");
+            var fileurl = $('#fileurl');
+            // send to the server
+            ghci.load(fileurl.val());
+            var result = ghci.eval(expr.val());
+            
+            // display the result
+            var newEl = $('<div/>');
+            newEl.html(result);
+            $('#ghci').append(newEl);
+            
+            // disable the input element
+            expr.attr("disabled", "disabled");
+            // add an input element to our form
+            var inputEl = $('<input class="expr" id="expr" type="text" />');
+            $('#ghci').append(inputEl);
+        
+            // don't use the default method for submitting the form!
+            return false;
+        });
+    });
+    </script>
+  </head>
+  <body>
+    <!-- I wouldn't call it pretty, but it does work -->
+    <form id="ghci">
+      <input type="text" id="fileurl" name="fileurl" value="http://www.ScannedInAvian.com/~shae/Demo.hs"/>File to load<br/>
+      <input type="submit" value="submit"/>
+    </form>
+  </body>
+</html>
+
