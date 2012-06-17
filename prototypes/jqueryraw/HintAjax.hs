@@ -26,7 +26,9 @@ main = scotty 3000 $ do
      hint <- liftIO $ newHint
 
      middleware logStdoutDev
-     middleware $ staticRoot "static" --  (noDots >-> addBase "static") -- serves jquery.js and clock.js from static/
+     -- middleware $ staticRoot "static" --  this works pre scotty-3.0.0
+     -- this works post-policy update scotty-3.0.0
+     middleware $ staticPolicy (noDots >-> addBase "static") -- serves jquery.js and clock.js from static/
 
      get "/" $ file "hint.html"
 
@@ -35,8 +37,8 @@ main = scotty 3000 $ do
          e <- param "expr"
          t <- liftIO . performHint hint $ runHint e u
          case t of
-             Left error -> json $ A.object [ST.pack "result" .= cleanShow error, ST.pack "expr" .= e]
-             Right string -> json $ A.object [ST.pack "result" .= string,ST.pack "expr" .= e]
+             Left error -> json $ A.object ["result" .= cleanShow error, "expr" .= e]
+             Right string -> json $ A.object [ "result" .= string, "expr" .= e]
          -- json t
 
 runHint :: String -> String -> InterpreterT IO String
@@ -70,7 +72,7 @@ loadFile w filepath = perform w $ do
 
 evaluate :: Hint -> String -> IO String
 evaluate w expr = perform w $ do
-    
+
 -- stopInterpreter :: Hint -> IO ()
 -}
 
@@ -96,9 +98,8 @@ newRun f = do
 
 
 cleanShow    :: InterpreterError -> String
-cleanShow ie = case ie of 
+cleanShow ie = case ie of
                  UnknownError e -> ("UnknownError\n" ++ e)
                  WontCompile es -> unlines $ (map errMsg es)
                  NotAllowed e -> ("NotAllowed\n" ++ e)
                  GhcException e -> ("GhcException\n" ++ e)
-                 
