@@ -44,5 +44,5 @@ $(document).ready(function(){
         promptHistory:true,
         // welcomeMessage:'Loaded http://www.ScannedInAvian.com/~shae/Demo.hs',
     });
-    controller.promptText('map (+1) [1,2,5]');
+    controller.promptText('renderDia SVG (SVGOptions "output.file" (Dims 200 200)) (circle 1 # fc red # lw 0 ||| circle 1 # fc green # lw 0 :: Diagram Diagrams.Backend.SVG.SVG R2)');
 });

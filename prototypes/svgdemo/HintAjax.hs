@@ -29,7 +29,8 @@ main = scotty 3000 $ do
      hint <- liftIO $ newHint
 
      middleware logStdoutDev
-     middleware $ staticPolicy (noDots >-> addBase "static") -- serves jquery.js and clock.js from static/
+     -- middleware $ staticPolicy (noDots >-> addBase "static") -- serves jquery.js and clock.js from static/
+     middleware $ staticRoot "static"
 
      get "/" $ file "hint.html"
 
@@ -39,18 +40,20 @@ main = scotty 3000 $ do
          t <- liftIO . performHint hint $ runHint e u
          case t of
              Left error -> json $ A.object ["result" .= cleanShow error, "expr" .= e]
-             Right string -> json $ A.object ["result" .= renderMarkup bar, "expr" .= e]
+             Right string -> json $ A.object ["result" .= renderMarkup string, "expr" .= e]
          -- json t
 
-runHint :: String -> String -> InterpreterT IO String
+-- runHint :: String -> String -> m String inferred
+-- runHint :: String -> String -> InterpreterT IO String
 runHint expr fileurl = do
     doc <- liftIO $ do
         Right doc <- openURI fileurl
         BS.writeFile "Main.hs" doc
-    loadModules ["Main.hs"]
-    setTopLevelModules ["Main"]
+    loadModules ["Main.hs","Helper.hs"]
+    setTopLevelModules ["Main","Helper"]
     setImportsQ [("Prelude",Nothing)]
-    result <- eval expr
+    -- result <- eval expr
+    result <- interpret expr (as :: H.Markup)
     return result
 
     -- eval :: String -> Interpret String
@@ -73,7 +76,7 @@ loadFile w filepath = perform w $ do
 
 evaluate :: Hint -> String -> IO String
 evaluate w expr = perform w $ do
-    
+
 -- stopInterpreter :: Hint -> IO ()
 -}
 
@@ -99,15 +102,16 @@ newRun f = do
 
 
 cleanShow    :: InterpreterError -> String
-cleanShow ie = case ie of 
+cleanShow ie = case ie of
                  UnknownError e -> ("UnknownError\n" ++ e)
                  WontCompile es -> unlines $ (map errMsg es)
                  NotAllowed e -> ("NotAllowed\n" ++ e)
                  GhcException e -> ("GhcException\n" ++ e)
-                 
 
--- explicit SVG value to render, for jquery-console testing
--- can load and eval the SVG in the next prototype
+
+{-- explicit SVG value to render, for jquery-console testing
+-- can load and eval the SVG in the next prototype -}
+
 spike :: Trail R2
 spike = fromOffsets . map r2 $ [(1,3), (1,-3)]
 
@@ -116,10 +120,6 @@ burst = mconcat . take 13 . iterate (rotateBy (-1/13)) $ spike
 colors = cycle [aqua, orange, deeppink, blueviolet, crimson, darkgreen]
 
 example :: Diagram Diagrams.Backend.SVG.SVG R2
-example = lw 1.0
-        . mconcat
-        . zipWith lc colors
-        . map stroke . explodeTrail origin
-        $ burst
+example = lw 1.0 . mconcat  . zipWith lc colors . map stroke . explodeTrail origin $ burst
 
 bar = renderDia SVG (SVGOptions "output.file" (Dims 200 200)) example
