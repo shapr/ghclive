@@ -28,8 +28,8 @@ main :: IO()
 main = scotty 3000 $ do
      hint <- liftIO $ newHint
 
-     middleware logStdoutDev
-     -- middleware $ staticPolicy (noDots >-> addBase "static") -- serves jquery.js and clock.js from static/
+     middleware logStdoutDev -- serves jquery.js and clock.js from static/
+     -- middleware $ staticPolicy (noDots >-> addBase "static") -- serves jquery.js and clock.js from static/ with scotty > 3
      middleware $ staticRoot "static"
 
      get "/" $ file "hint.html"
@@ -107,19 +107,3 @@ cleanShow ie = case ie of
                  WontCompile es -> unlines $ (map errMsg es)
                  NotAllowed e -> ("NotAllowed\n" ++ e)
                  GhcException e -> ("GhcException\n" ++ e)
-
-
-{-- explicit SVG value to render, for jquery-console testing
--- can load and eval the SVG in the next prototype -}
-
-spike :: Trail R2
-spike = fromOffsets . map r2 $ [(1,3), (1,-3)]
-
-burst = mconcat . take 13 . iterate (rotateBy (-1/13)) $ spike
-
-colors = cycle [aqua, orange, deeppink, blueviolet, crimson, darkgreen]
-
-example :: Diagram Diagrams.Backend.SVG.SVG R2
-example = lw 1.0 . mconcat  . zipWith lc colors . map stroke . explodeTrail origin $ burst
-
-bar = renderDia SVG (SVGOptions "output.file" (Dims 200 200)) example

@@ -14,3 +14,4 @@ The prototypes subdirectory contains several quick hacks demonstrating various c
 * [hintpostexecute](ghclive/tree/master/prototypes/hintpostexecute) uses all the previous prototypes to give a very basic ghci in the browser with Main.hs loaded from any http URL
 * [jqueryconsole](ghclive/tree/master/prototypes/jqueryconsole) extends the above prototypes to use [Chris Done](https://github.com/chrisdone/)‘s [jquery-console](https://github.com/chrisdone/jquery-console) as famously seen in [tryhaskell.org](http://tryhaskell.org/), giving a more GHCi-like result
 * [jqueryraw](ghclive/tree/master/prototypes/jqueryraw) is much simpler in that it uses jquery but not jquery-console.
+* [svgdemo](ghclive/tree/master/prototypes/svgdemo) demonstrates SVG being returned from diagrams
