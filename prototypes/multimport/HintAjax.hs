@@ -68,11 +68,12 @@ runHint expr fileurl = do
   -- (webs,mods) =
   files <- liftIO $ do
              putStrLn ("fileurl is " ++ (show $ lines fileurl))
-             mapM cacheFile (lines fileurl)
+             mapM cacheFile (urls fileurl)
   let allfiles = ["Helper.hs"] ++ files
   loadModules $ map (cachedir ++) allfiles
   setTopLevelModules $ map (takeWhile (/= '.')) allfiles
-  setImportsQ [("Prelude",Nothing)]
+  let imports = map (flip (,) Nothing) $ mods fileurl
+  setImportsQ $ [("Prelude",Nothing)] ++ imports
   result <- eval expr
   -- result <- interpret expr (as :: H.Markup)
   return result

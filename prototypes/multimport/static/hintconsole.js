@@ -19,7 +19,7 @@ function getResult(fileurl, expr){
 }
 
 $(document).ready(function(){
-    $('#fileurl').val('http://www.ScannedInAvian.com/~shae/Demo.hs\nhttp://www.ScannedInAvian.com/~shae/DemoMulti.hs');
+    $('#fileurl').val('http://www.ScannedInAvian.com/~shae/Demo.hs\nhttp://www.ScannedInAvian.com/~shae/DemoMulti.hs\nData.Char');
 
     var console1 = $('<div class="console">');
     $('body').append(console1);
@@ -45,5 +45,5 @@ $(document).ready(function(){
         // welcomeMessage:'Loaded http://www.ScannedInAvian.com/~shae/Demo.hs',
     });
     // controller.promptText('renderDia SVG (SVGOptions "output.file" (Dims 200 200)) (circle 1 # fc red # lw 0 ||| circle 1 # fc green # lw 0 :: Diagram Diagrams.Backend.SVG.SVG R2)');
-    controller.promptText('map (+1) [3,5,9]');
+    controller.promptText("isLower 'a' -- isLower not in scope unless Data.Char in imports above");
 });
