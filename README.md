@@ -15,3 +15,4 @@ The prototypes subdirectory contains several quick hacks demonstrating various c
 * [jqueryconsole](ghclive/tree/master/prototypes/jqueryconsole) extends the above prototypes to use [Chris Done](https://github.com/chrisdone/)‘s [jquery-console](https://github.com/chrisdone/jquery-console) as famously seen in [tryhaskell.org](http://tryhaskell.org/), giving a more GHCi-like result
 * [jqueryraw](ghclive/tree/master/prototypes/jqueryraw) is much simpler in that it uses jquery but not jquery-console.
 * [svgdemo](ghclive/tree/master/prototypes/svgdemo) demonstrates SVG being returned from diagrams
+* [multimport](ghclive/tree/master/prototypes/multimport) takes any number of imports from a textbox. Each line is either the http address of a file to load, or a module name to bring in scope (Data.Char).
