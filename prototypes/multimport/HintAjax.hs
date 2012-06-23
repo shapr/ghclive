@@ -19,6 +19,7 @@ import           Control.Monad (void, forever, liftM)
 import           Control.Monad.Error.Class
 import           Data.Aeson ((.=))
 import qualified Data.Aeson as A
+import           Data.Char (isUpper)
 import qualified Data.Text as ST
 import           Diagrams.Backend.SVG
 import           Diagrams.Prelude
@@ -55,19 +56,26 @@ cacheFile fileurl = do
   return fname
       where fname = filenameFromUrl fileurl
 
+listmatch a b = and $ zipWith (==) a b
+
+urls fbox = filter (listmatch "http://") $ lines fbox
+
+mods fbox = filter (isUpper . head) $ lines fbox -- blows up with empty lines?
+
 -- runHint :: String -> String -> m String inferred
 -- runHint :: String -> String -> InterpreterT IO String
 runHint expr fileurl = do
-    files <- liftIO $ do
+  -- (webs,mods) =
+  files <- liftIO $ do
              putStrLn ("fileurl is " ++ (show $ lines fileurl))
              mapM cacheFile (lines fileurl)
-    let allfiles = ["Helper.hs"] ++ files -- assume Main is downloaded!
-    loadModules $ map (cachedir ++) allfiles
-    setTopLevelModules $ map (takeWhile (/= '.')) allfiles
-    setImportsQ [("Prelude",Nothing)]
-    result <- eval expr
-    -- result <- interpret expr (as :: H.Markup)
-    return result
+  let allfiles = ["Helper.hs"] ++ files
+  loadModules $ map (cachedir ++) allfiles
+  setTopLevelModules $ map (takeWhile (/= '.')) allfiles
+  setImportsQ [("Prelude",Nothing)]
+  result <- eval expr
+  -- result <- interpret expr (as :: H.Markup)
+  return result
 
     -- eval :: String -> Interpret String
     -- eval "something" ~= interpret "(show something) (as :: String)"
