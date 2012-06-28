@@ -21,6 +21,7 @@ import           Data.Aeson ((.=))
 import qualified Data.Aeson as A
 import           Data.Char (isUpper)
 import qualified Data.Text as ST
+import           Data.Typeable
 import           Diagrams.Backend.SVG
 import           Diagrams.Prelude
 import           Network.Web.HyperHaskell.Display
@@ -36,7 +37,7 @@ main = scotty 3000 $ do
      -- middleware $ staticPolicy (noDots >-> addBase "static") -- serves jquery.js and clock.js from static/ with scotty > 3
      middleware $ staticRoot "static"
 
-     get "/" $ file "hint.html"
+     get "/" $ file "static/hint.html"
 
      get "/hint" $ do
          u <- param "fileurl"
@@ -44,7 +45,7 @@ main = scotty 3000 $ do
          t <- liftIO . performHint hint $ runHint e u
          case t of
            Left error -> json . display $ cleanShow error
-           Right string -> json $ display string
+           Right displayres -> json displayres
 
 filenameFromUrl = reverse . takeWhile (/= '/') . reverse
 
@@ -63,8 +64,9 @@ mods fbox = filter (isUpper . head) $ lines fbox -- blows up with empty lines?
 
 -- runHint :: String -> String -> m String inferred
 -- runHint :: String -> String -> InterpreterT IO String
+-- runHint :: (Typeable a,Display a) => String -> String -> IO (Either InterpreterError a)
+runHint :: MonadInterpreter m => String -> String -> m DisplayResult
 runHint expr fileurl = do
-  -- (webs,mods) =
   files <- liftIO $ do
              putStrLn ("fileurl is " ++ (show $ lines fileurl))
              mapM cacheFile (urls fileurl)
@@ -73,8 +75,8 @@ runHint expr fileurl = do
   setTopLevelModules $ map (takeWhile (/= '.')) allfiles
   let imports = map (flip (,) Nothing) $ mods fileurl
   setImportsQ $ [("Prelude",Nothing)] ++ imports
-  result <- eval expr
-  -- result <- display $ interpret expr (as :: DisplayResult)
+  -- result <- eval expr
+  result <- interpret expr as -- (as :: DisplayResult)
   return result
 
     -- eval :: String -> Interpret String
