@@ -3,7 +3,6 @@ module Main where
 import           Control.Monad.Trans
 import           Data.Monoid
 import qualified Data.Text.Lazy as T
--- import           Data.Time.Clock
 import           Network.Wai
 import           Network.Wai.Middleware.RequestLogger
 import           Network.Wai.Middleware.Static
@@ -62,9 +61,6 @@ urls fbox = filter (listmatch "http://") $ lines fbox
 
 mods fbox = filter (isUpper . head) $ lines fbox -- blows up with empty lines?
 
--- runHint :: String -> String -> m String inferred
--- runHint :: String -> String -> InterpreterT IO String
--- runHint :: (Typeable a,Display a) => String -> String -> IO (Either InterpreterError a)
 runHint :: MonadInterpreter m => String -> String -> m DisplayResult
 runHint expr fileurl = do
   files <- liftIO $ do
@@ -74,9 +70,8 @@ runHint expr fileurl = do
   loadModules $ map (cachedir ++) allfiles
   setTopLevelModules $ map (takeWhile (/= '.')) allfiles
   let imports = map (flip (,) Nothing) $ mods fileurl
-  setImportsQ $ [("Prelude",Nothing)] ++ imports
-  -- result <- eval expr
-  result <- interpret expr as -- (as :: DisplayResult)
+  setImportsQ $ [("Prelude",Nothing),("Network.Web.HyperHaskell.Display",Nothing)] ++ imports
+  result <- interpret ("display " ++ parens expr) as -- (as :: DisplayResult)
   return result
 
     -- eval :: String -> Interpret String
