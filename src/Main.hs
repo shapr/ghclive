@@ -23,6 +23,7 @@ import           Data.Char (isUpper)
 import qualified Data.Text as ST
 import           Diagrams.Backend.SVG
 import           Diagrams.Prelude
+import           Network.Web.HyperHaskell.Display
 import           Text.Blaze.Renderer.Text (renderMarkup)
 
 cachedir = "cache/"
@@ -42,10 +43,8 @@ main = scotty 3000 $ do
          e <- param "expr"
          t <- liftIO . performHint hint $ runHint e u
          case t of
-             Left error -> json $ A.object ["result" .= cleanShow error, "expr" .= e]
-             -- Right string -> json $ A.object ["result" .= renderMarkup string, "expr" .= e]
-             Right string -> json $ A.object ["result" .= string, "expr" .= e]
-         -- json t
+           Left error -> json . display $ cleanShow error
+           Right string -> json $ display string
 
 filenameFromUrl = reverse . takeWhile (/= '/') . reverse
 
@@ -75,7 +74,7 @@ runHint expr fileurl = do
   let imports = map (flip (,) Nothing) $ mods fileurl
   setImportsQ $ [("Prelude",Nothing)] ++ imports
   result <- eval expr
-  -- result <- interpret expr (as :: H.Markup)
+  -- result <- display $ interpret expr (as :: DisplayResult)
   return result
 
     -- eval :: String -> Interpret String
