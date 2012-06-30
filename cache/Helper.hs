@@ -20,3 +20,6 @@ example :: Diagram Diagrams.Backend.SVG.SVG R2
 example = lw 1.0 . mconcat  . zipWith lc colors . map stroke . explodeTrail origin $ burst
 
 bar = renderDia SVG (SVGOptions "output.file" (Dims 200 200)) example
+
+dia :: Diagram Diagrams.Backend.SVG.SVG R2 -> Diagram Diagrams.Backend.SVG.SVG R2
+dia = id
