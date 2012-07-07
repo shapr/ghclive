@@ -23,13 +23,20 @@ import qualified Data.Text as ST
 import           Data.Typeable
 import           Diagrams.Backend.SVG
 import           Diagrams.Prelude
-import           Network.Web.HyperHaskell.Display
+import           Network.Web.GHCLive.Display
 import           Text.Blaze.Renderer.Text (renderMarkup)
+
+
+defaultOutput :: H.Html
+defaultOutput = mempty
 
 cachedir = "cache/"
 
 main :: IO()
-main = scotty 3000 $ do
+main = do
+  ref <- newEmptyMVar :: IO (MVar H.Html)
+  putMVar ref defaultOutput 
+  scotty 3000 $ do
      hint <- liftIO $ newHint
 
      middleware logStdoutDev -- serves jquery.js and clock.js from static/
@@ -37,6 +44,10 @@ main = scotty 3000 $ do
      middleware $ staticRoot "static"
 
      get "/" $ file "static/hint.html"
+     
+     get "/output" $ do
+                  h <- liftIO $ readMVar ref
+                  html $ renderMarkup h
 
      get "/hint" $ do
          u <- param "fileurl"

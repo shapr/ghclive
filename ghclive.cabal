@@ -51,7 +51,7 @@ Library
 
   -- Directories containing source files.
   hs-source-dirs:      src
-  exposed-modules: Network.Web.ghclive.Display
+  exposed-modules: Network.Web.GHCLive.Display
 
   
 executable ghclive

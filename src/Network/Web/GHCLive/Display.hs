@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Network.Web.HyperHaskell.Display where
+module Network.Web.GHCLive.Display where
 
 import           Data.Aeson ((.=), ToJSON)
 import qualified Data.Aeson as A
