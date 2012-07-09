@@ -24,30 +24,28 @@ import           Data.Typeable
 import           Diagrams.Backend.SVG
 import           Diagrams.Prelude
 import           Network.Web.GHCLive.Display
+import           Text.Blaze
 import           Text.Blaze.Renderer.Text (renderMarkup)
 
 
-defaultOutput :: H.Html
-defaultOutput = mempty
 
 cachedir = "cache/"
 
 main :: IO()
 main = do
   ref <- newEmptyMVar :: IO (MVar H.Html)
-  putMVar ref defaultOutput 
+  putMVar ref defaultOutput
   scotty 3000 $ do
      hint <- liftIO $ newHint
-
      middleware logStdoutDev -- serves jquery.js and clock.js from static/
      -- middleware $ staticPolicy (noDots >-> addBase "static") -- serves jquery.js and clock.js from static/ with scotty > 3
      middleware $ staticRoot "static"
 
      get "/" $ file "static/hint.html"
-     
+
      get "/output" $ do
                   h <- liftIO $ readMVar ref
-                  html $ renderMarkup h
+                  html . renderMarkup $ wrap h
 
      get "/hint" $ do
          u <- param "fileurl"
@@ -55,7 +53,32 @@ main = do
          t <- liftIO . performHint hint $ runHint e u
          case t of
            Left error -> json . display $ cleanShow error
-           Right displayres -> json displayres
+           Right displayres -> do
+                     liftIO $ modifyMVar_ ref (happend displayres)
+                     json $ display displayres
+                               -- $ do
+                               --   modifyMVar_ ref (happend displayres)
+                               --   return display
+
+-- (modifyMVar_) :: MVar a -> (a -> IO a) -> IO ()
+happend :: H.Html -> (H.Html -> IO H.Html)
+happend content adds = return $ (H.p adds) `mappend` content -- . mappend (adds :: H.Html)
+
+-- modifyMVar_ ref
+
+
+{---
+output page goodies
+---}
+defaultOutput :: H.Html
+defaultOutput = mempty
+
+wrap c = H.docTypeHtml $ do
+           H.head $ do
+             H.title $ H.toMarkup ("ghclive output" :: String)
+           H.body $ do
+             H.p $ H.toMarkup ("ghclive output" :: String)
+             c
 
 filenameFromUrl = reverse . takeWhile (/= '/') . reverse
 
@@ -72,7 +95,7 @@ urls fbox = filter (listmatch "http://") $ lines fbox
 
 mods fbox = filter (isUpper . head) $ lines fbox -- blows up with empty lines?
 
-runHint :: MonadInterpreter m => String -> String -> m DisplayResult
+runHint :: MonadInterpreter m => String -> String -> m H.Html
 runHint expr fileurl = do
   files <- liftIO $ do
              putStrLn ("fileurl is " ++ (show $ lines fileurl))
@@ -81,8 +104,9 @@ runHint expr fileurl = do
   loadModules $ map (cachedir ++) allfiles
   setTopLevelModules $ map (takeWhile (/= '.')) allfiles
   let imports = map (flip (,) Nothing) $ mods fileurl
-  setImportsQ $ [("Prelude",Nothing),("Network.Web.HyperHaskell.Display",Nothing)] ++ imports
-  result <- interpret ("display " ++ parens expr) as -- (as :: DisplayResult)
+  setImportsQ $ [("Prelude",Nothing),("Network.Web.GHCLive.Display",Nothing),("Text.Blaze",Nothing)] ++ imports
+  --result <- interpret ("display " ++ parens expr) as -- (as :: DisplayResult)
+  result <- interpret expr as -- (as :: DisplayResult)
   return result
 
     -- eval :: String -> Interpret String

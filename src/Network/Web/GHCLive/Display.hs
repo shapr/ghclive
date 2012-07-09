@@ -27,15 +27,15 @@ instance ToJSON DisplayResult where
                        ]
 
 class Display a where
-    display :: (Display a) => a -> DisplayResult
+    display :: a -> DisplayResult
 
 displayEmpty = DisplayResult { clientType = "text", resources = [], result = "no result" }
 
-renderMyDiagramToSvg     :: Diagram SVG R2 -> Text
-renderMyDiagramToSvg dia = renderHtml $ renderDia SVG (SVGOptions "output.file" (Dims 200 200)) (dia :: Diagram Diagrams.Backend.SVG.SVG R2)
+renderMyDiagramToSvg     :: Diagram SVG R2 -> Html
+renderMyDiagramToSvg dia = renderDia SVG (SVGOptions "output.file" (Dims 200 200)) (dia :: Diagram Diagrams.Backend.SVG.SVG R2)
 
 instance Display (Diagram SVG R2) where
-    display d = DisplayResult { clientType="svg", result=renderMyDiagramToSvg d, resources = []}
+    display d = DisplayResult { clientType="svg", result=renderHtml $ renderMyDiagramToSvg d, resources = []}
 
 instance Display Text where
     display d = DisplayResult { clientType="text", result= d, resources = []}
@@ -44,6 +44,6 @@ instance Display String where
     display d = display $ pack d -- pack to Data.Text
 
 instance Display Markup where
-    display d = DisplayResult{clientType="svg", result= renderHtml d, resources =[] }
+    display d = DisplayResult{clientType="svg", result= renderHtml $ p d, resources =[] }
 
 -- Other useful instances?

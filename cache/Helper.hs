@@ -6,7 +6,7 @@ Thus this file exists to import Diagrams and Blaze and still be interpreted
 
 import Diagrams.Backend.SVG
 import Diagrams.Prelude
-import Network.Web.HyperHaskell.Display
+import Network.Web.GHCLive.Display
 import Text.Blaze.Internal
 
 spike :: Trail R2
