@@ -1,31 +1,31 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 import           Control.Monad.Trans
+import qualified Data.ByteString                      as BS
 import           Data.Monoid
-import qualified Data.Text.Lazy as T
+import qualified Data.Text.Lazy                       as T
+import           Language.Haskell.Interpreter         hiding (get)
+import           Network.Curl.Download
 import           Network.Wai
 import           Network.Wai.Middleware.RequestLogger
 import           Network.Wai.Middleware.Static
-import qualified Text.Blaze.Html5 as H
+import qualified Text.Blaze.Html5                     as H
 import           Web.Scotty
-import           Language.Haskell.Interpreter hiding (get)
-import           Network.Curl.Download
-import qualified Data.ByteString as BS
 
 import           Control.Concurrent
 import           Control.Concurrent.MVar
-import           Control.Monad (void, forever, liftM)
+import           Control.Monad                        (forever, liftM, void)
 import           Control.Monad.Error.Class
-import           Data.Aeson ((.=))
-import qualified Data.Aeson as A
-import           Data.Char (isUpper)
-import qualified Data.Text as ST
+import           Data.Aeson                           ((.=))
+import qualified Data.Aeson                           as A
+import           Data.Char                            (isUpper)
+import qualified Data.Text                            as ST
 import           Data.Typeable
 import           Diagrams.Backend.SVG
 import           Diagrams.Prelude
 import           Network.Web.GHCLive.Display
 import           Text.Blaze
-import           Text.Blaze.Renderer.Text (renderMarkup)
+import           Text.Blaze.Renderer.Text             (renderMarkup)
 
 
 
@@ -33,12 +33,10 @@ cachedir = "cache/"
 
 main :: IO()
 main = do
-  ref <- newEmptyMVar :: IO (MVar H.Html)
-  putMVar ref defaultOutput
+  ref <- newMVar defaultOutput
   scotty 3000 $ do
      hint <- liftIO $ newHint
      middleware logStdoutDev -- serves jquery.js and clock.js from static/
-     -- middleware $ staticPolicy (noDots >-> addBase "static") -- serves jquery.js and clock.js from static/ with scotty > 3
      middleware $ staticRoot "static"
 
      get "/" $ file "static/hint.html"
@@ -54,18 +52,12 @@ main = do
          case t of
            Left error -> json . display $ cleanShow error
            Right displayres -> do
-                     liftIO $ modifyMVar_ ref (happend displayres)
+                     liftIO $ modifyMVar_ ref (happend e displayres)
                      json $ display displayres
-                               -- $ do
-                               --   modifyMVar_ ref (happend displayres)
-                               --   return display
 
 -- (modifyMVar_) :: MVar a -> (a -> IO a) -> IO ()
-happend :: H.Html -> (H.Html -> IO H.Html)
-happend content adds = return $ (H.p adds) `mappend` content -- . mappend (adds :: H.Html)
-
--- modifyMVar_ ref
-
+happend :: String -> H.Html -> (H.Html -> IO H.Html)
+happend expr adds content = return $ content `mappend` (H.p $ H.toMarkup ("hint> " :: String) `mappend` H.toMarkup expr `mappend` H.p adds)
 
 {---
 output page goodies
