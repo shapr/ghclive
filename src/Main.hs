@@ -50,7 +50,9 @@ main = do
          e <- param "expr"
          t <- liftIO . performHint hint $ runHint e u
          case t of
-           Left error -> json . display $ cleanShow error
+           Left error -> do
+                     liftIO $ modifyMVar_ ref (happend e (H.toMarkup $ cleanShow error))
+                     json . display $ cleanShow error
            Right displayres -> do
                      liftIO $ modifyMVar_ ref (happend e displayres)
                      json $ display displayres
