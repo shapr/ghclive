@@ -35,7 +35,7 @@ main :: IO()
 main = do
   ref <- newMVar defaultOutput
   scotty 3000 $ do
-     hint <- liftIO $ newHint
+     hint <- liftIO newHint
      middleware logStdoutDev -- serves jquery.js and clock.js from static/
      middleware $ staticRoot "static"
 
@@ -57,9 +57,10 @@ main = do
                      liftIO $ modifyMVar_ ref (happend e displayres)
                      json $ display displayres
 
+
 -- (modifyMVar_) :: MVar a -> (a -> IO a) -> IO ()
 happend :: String -> H.Html -> (H.Html -> IO H.Html)
-happend expr adds content = return $ content `mappend` (H.p $ H.toMarkup ("hint> " :: String) `mappend` H.toMarkup expr `mappend` H.p adds)
+happend expr adds content = return $ content `mappend` H.p ( H.toMarkup ("hint> " :: String) `mappend` H.toMarkup expr `mappend` H.p adds)
 
 {---
 output page goodies
@@ -68,7 +69,7 @@ defaultOutput :: H.Html
 defaultOutput = mempty
 
 wrap c = H.docTypeHtml $ do
-           H.head $ do
+           H.head $
              H.title $ H.toMarkup ("ghclive output" :: String)
            H.body $ do
              H.p $ H.toMarkup ("ghclive output" :: String)
@@ -92,16 +93,14 @@ mods fbox = filter (isUpper . head) $ lines fbox -- blows up with empty lines?
 runHint :: MonadInterpreter m => String -> String -> m H.Html
 runHint expr fileurl = do
   files <- liftIO $ do
-             putStrLn ("fileurl is " ++ (show $ lines fileurl))
+             putStrLn $ "fileurl is " ++ show (lines fileurl)
              mapM cacheFile (urls fileurl)
-  let allfiles = ["Helper.hs"] ++ files
+  let allfiles = "Helper.hs" : files
   loadModules $ map (cachedir ++) allfiles
   setTopLevelModules $ map (takeWhile (/= '.')) allfiles
   let imports = map (flip (,) Nothing) $ mods fileurl
   setImportsQ $ [("Prelude",Nothing),("Network.Web.GHCLive.Display",Nothing),("Text.Blaze",Nothing)] ++ imports
-  --result <- interpret ("display " ++ parens expr) as -- (as :: DisplayResult)
-  result <- interpret expr as -- (as :: DisplayResult)
-  return result
+  interpret expr as
 
     -- eval :: String -> Interpret String
     -- eval "something" ~= interpret "(show something) (as :: String)"
@@ -150,7 +149,7 @@ newRun f = do
 
 cleanShow    :: InterpreterError -> String
 cleanShow ie = case ie of
-                 UnknownError e -> ("UnknownError\n" ++ e)
-                 WontCompile es -> unlines $ (map errMsg es)
-                 NotAllowed e -> ("NotAllowed\n" ++ e)
-                 GhcException e -> ("GhcException\n" ++ e)
+                 UnknownError e -> "UnknownError\n" ++ e
+                 WontCompile es -> unlines $ map errMsg es
+                 NotAllowed e -> "NotAllowed\n" ++ e
+                 GhcException e -> "GhcException\n" ++ e
