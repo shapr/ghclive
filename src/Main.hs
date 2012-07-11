@@ -10,6 +10,7 @@ import           Network.Wai
 import           Network.Wai.Middleware.RequestLogger
 import           Network.Wai.Middleware.Static
 import qualified Text.Blaze.Html5                     as H
+import           Text.Blaze.Html5.Attributes          (class_)
 import           Web.Scotty
 
 import           Control.Concurrent
@@ -60,19 +61,21 @@ main = do
 
 -- (modifyMVar_) :: MVar a -> (a -> IO a) -> IO ()
 happend :: String -> H.Html -> (H.Html -> IO H.Html)
-happend expr adds content = return $ content `mappend` H.p ( H.toMarkup ("hint> " :: String) `mappend` H.toMarkup expr `mappend` H.p adds)
+happend expr adds content = return $ mconcat [content,
+                                              H.p "hint> " ! class_ "hint-prompt",
+                                              H.p (H.toMarkup expr) ! class_ "hint-expr",
+                                              H.p adds ! class_ "hint-res"
+                                              ]
 
-{---
-output page goodies
----}
+{--- output page goodies ---}
 defaultOutput :: H.Html
 defaultOutput = mempty
 
 wrap c = H.docTypeHtml $ do
            H.head $
-             H.title $ H.toMarkup ("ghclive output" :: String)
+             H.title $ "ghclive output"
            H.body $ do
-             H.p $ H.toMarkup ("ghclive output" :: String)
+             H.p $ "ghclive output"
              c
 
 filenameFromUrl = reverse . takeWhile (/= '/') . reverse
