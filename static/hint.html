@@ -4,12 +4,77 @@
     <link rel="stylesheet" type="text/css" href="style.css" media="screen">
     <script type="text/javascript" src="jquery.js"></script>
     <script type="text/javascript" src="jquery.console.js"></script>
+    <script type="text/javascript" src="http://localhost:9090/bdo"></script>
     <script type="text/javascript" src="hintconsole.js"></script>
+    <!-- sharejs + codemirror -->
+    <link rel="stylesheet" href="http://localhost:8000/lib/cm/lib/codemirror.css">
+
   </head>
   <body>
     <!-- I wouldn't call it pretty, but it does work -->
     <form action="/hint" method="get">
       <input type="text" id="fileurl" name="fileurl"/>File to load<br/>
     </form>
+
+<div id="header">
+  <div id="htext">
+    <b>Editing</b> <input type="text" value="cm" id='namefield'>
+  </div>
+</div>
+
+    <script src="http://localhost:8000/lib/cm/lib/codemirror.js"></script>
+    <script src="http://localhost:8000/lib/cm/mode/haskell/haskell.js"></script>
+    <script src="http://localhost:8000/channel/bcsocket.js"></script>
+    <script src="http://localhost:8000/share/share.uncompressed.js"></script>
+    <script src="http://localhost:8000/share/cm.js"></script>
+    <script>
+var doc = null, editor = null;
+
+function setDoc(docName) {
+  document.title = docName;
+
+  sharejs.open(docName, 'text', 'http://localhost:8000/channel', function(error, newDoc) {
+      if (doc !== null) {
+          doc.close();
+          doc.detach_ace();
+      }
+
+      doc = newDoc;
+
+      if (error) {
+          console.error(error);
+          return;
+      }
+      doc.attach_cm(editor);
+  });
+};
+
+window.onload = function() {
+  var ed = document.getElementById('editor');
+  editor = CodeMirror(document.body, { mode: "haskell", tabSize: 2 });
+
+  setDoc('cm');  // Hooking ShareJS and CodeMirror for the first time.
+
+  var namefield = document.getElementById('namefield');
+  function fn() {
+      var docName = namefield.value;
+      if (docName) setDoc(docName);
+  }
+
+  if (namefield.addEventListener) {
+      namefield.addEventListener('input', fn, false);
+  } else {
+      namefield.attachEvent('oninput', fn);
+  }
+};
+    </script>
+<!-- end sharejs + codemirror -->
+
+<div id="editor" > This should be the editor widget </div>
+<script type="text/javascript">
+  $("#load").click(function() {
+  alert("oh hai there");
+  }
+</script>
   </body>
 </html>

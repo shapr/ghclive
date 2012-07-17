@@ -40,8 +40,12 @@ div.console div.jquery-console-message-type
 
 div.console span.jquery-console-prompt-label { font-weight:bold }
 
+div.console span.jquery-console-prompt-label { font-weight:bold }
+
 div.console div.jquery-console-message-success
 { color:#1ad027; font-family:monospace; padding:0.1em; }
 
 div.console div.jquery-console-welcome
 { color:#ffffff; font-weight:bold;}
+
+div.CodeMirror { background: #999999; }

@@ -10,7 +10,7 @@ import           Network.Wai
 import           Network.Wai.Middleware.RequestLogger
 import           Network.Wai.Middleware.Static
 import qualified Text.Blaze.Html5                     as H
-import           Text.Blaze.Html5.Attributes          (class_)
+import           Text.Blaze.Html5.Attributes          (class_, href, rel, src, type_)
 import           Web.Scotty
 
 import           Control.Concurrent
@@ -39,6 +39,8 @@ main = do
      hint <- liftIO newHint
      middleware logStdoutDev -- serves jquery.js and clock.js from static/
      middleware $ staticRoot "static"
+     middleware $ staticRoot "examples"
+     middleware $ staticRoot "webclient"
 
      get "/" $ file "static/hint.html"
 
@@ -62,9 +64,9 @@ main = do
 -- (modifyMVar_) :: MVar a -> (a -> IO a) -> IO ()
 happend :: String -> H.Html -> (H.Html -> IO H.Html)
 happend expr adds content = return $ mconcat [content,
-                                              H.p "hint> " ! class_ "hint-prompt",
-                                              H.p (H.toMarkup expr) ! class_ "hint-expr",
-                                              H.p adds ! class_ "hint-res"
+                                              H.div "hint> " ! class_ "hint-prompt",
+                                              H.div (H.toMarkup expr) ! class_ "hint-expr",
+                                              H.p $ H.div adds ! class_ "hint-res"
                                               ]
 
 {--- output page goodies ---}
@@ -72,8 +74,11 @@ defaultOutput :: H.Html
 defaultOutput = mempty
 
 wrap c = H.docTypeHtml $ do
-           H.head $
-             H.title $ "ghclive output"
+           H.head $ do
+             H.title "ghclive output"
+             H.link ! rel "stylesheet" ! type_ "text/css" ! src "style.css"
+             H.script "" ! type_ "text/javascript" ! src "jquery.js"
+             H.script "" ! type_ "text/javascript" ! src "http://localhost:9090/bdo"
            H.body $ do
              H.p $ "ghclive output"
              c

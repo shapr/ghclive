@@ -1,11 +1,11 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable   #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
 module Network.Web.GHCLive.Display where
 
-import           Data.Aeson ((.=), ToJSON)
-import qualified Data.Aeson as A
+import           Data.Aeson                    (ToJSON, (.=))
+import qualified Data.Aeson                    as A
 import           Data.Text.Lazy
 import           Data.Typeable
 import           Diagrams.Backend.SVG
