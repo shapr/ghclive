@@ -32,34 +32,6 @@ import           Text.Blaze.Renderer.Text             (renderMarkup)
 
 cachedir = "cache/"
 
-main :: IO()
-main = do
-  ref <- newMVar defaultOutput
-  scotty 3000 $ do
-     hint <- liftIO newHint
-     middleware logStdoutDev -- serves jquery.js and clock.js from static/
-     middleware $ staticRoot "static"
-     middleware $ staticRoot "examples"
-     middleware $ staticRoot "webclient"
-
-     get "/" $ file "static/hint.html"
-
-     get "/output" $ do
-                  h <- liftIO $ readMVar ref
-                  html . renderMarkup $ wrap h
-
-     get "/hint" $ do
-         u <- param "fileurl"
-         e <- param "expr"
-         t <- liftIO . performHint hint $ runHint e u
-         case t of
-           Left error -> do
-                     liftIO $ modifyMVar_ ref (happend e (H.toMarkup $ cleanShow error))
-                     json . display $ cleanShow error
-           Right displayres -> do
-                     liftIO $ modifyMVar_ ref (happend e displayres)
-                     json $ display displayres
-
 
 -- (modifyMVar_) :: MVar a -> (a -> IO a) -> IO ()
 happend :: String -> H.Html -> (H.Html -> IO H.Html)
@@ -69,40 +41,76 @@ happend expr adds content = return $ mconcat [content,
                                               H.p $ H.div adds ! class_ "hint-res"
                                               ]
 
-{--- output page goodies ---}
-defaultOutput :: H.Html
-defaultOutput = mempty
+main :: IO()
+main = do
+  ref <- newMVar defaultOutput
+  scotty 3000 $ do
+    hint <- liftIO newHint
+    middleware logStdoutDev -- serves jquery.js and clock.js from static/
+    middleware $ staticRoot "static"
+    middleware $ staticRoot "examples"
+    middleware $ staticRoot "webclient"
 
-wrap c = H.docTypeHtml $ do
-           H.head $ do
-             H.title "ghclive output"
-             H.link ! rel "stylesheet" ! type_ "text/css" ! src "style.css"
-             H.script "" ! type_ "text/javascript" ! src "jquery.js"
-             H.script "" ! type_ "text/javascript" ! src "http://localhost:9090/bdo"
-           H.body $ do
-             H.p $ "ghclive output"
-             c
+    get "/" $ file "static/hint.html"
 
-filenameFromUrl = reverse . takeWhile (/= '/') . reverse
+    get "/output" $ do
+      h <- liftIO $ readMVar ref
+      html . renderMarkup $ wrap h
 
-cacheFile fileurl = do
-  putStrLn ("cacheFile got " ++ fileurl)
-  Right doc <- openURI fileurl
-  BS.writeFile (cachedir ++ fname) doc -- is wrong if filename /= module name!
-  return fname
-      where fname = filenameFromUrl fileurl
+    get "/eval" $ do
+      e <- param "expr"
+      t <- liftIO . performHint hint $ interpretHint e
+      case t of
+        Left error -> do
+          liftIO $ modifyMVar_ ref (happend e (H.toMarkup $ cleanShow error))
+          json . display $ cleanShow error
+        Right displayres -> do
+          liftIO $ modifyMVar_ ref (happend e displayres)
+          json $ display displayres
 
-listmatch a b = and $ zipWith (==) a b
+    get "/load" $ do
+      f <- param "module"
+      t <- liftIO . performHint hint $ moduleHint f
+      case t of
+        Left error -> do
+          -- liftIO $ modifyMVar_ ref (happend t (H.toMarkup $ cleanShow error))
+          json $ cleanShow error
+        Right displayres -> do
+          -- liftIO $ modifyMVar_ ref (happend t displayres)
+          json displayres
 
-urls fbox = filter (listmatch "http://") $ lines fbox
+    get "/hint" $ do
+      u <- param "fileurl"
+      e <- param "expr"
+      t <- liftIO . performHint hint $ runHint e u
+      case t of
+        Left error -> do
+          liftIO $ modifyMVar_ ref (happend e (H.toMarkup $ cleanShow error))
+          json . display $ cleanShow error
+        Right displayres -> do
+          liftIO $ modifyMVar_ ref (happend e displayres)
+          json $ display displayres
 
-mods fbox = filter (isUpper . head) $ lines fbox -- blows up with empty lines?
+interpretHint :: (Typeable a, MonadInterpreter m) => String -> m a
+interpretHint expr = do
+  interpret expr as
+
+moduleHint :: MonadInterpreter m => String -> m [ModuleName]
+moduleHint ms = do
+  -- save the file
+  fname <- liftIO $ cacheFile ms
+  let allfiles = "Helper.hs" : [fname]
+  loadModules $ map (cachedir ++) allfiles
+  setTopLevelModules $ map (takeWhile (/= '.')) allfiles
+  setImportsQ $ [("Prelude",Nothing),("Network.Web.GHCLive.Display",Nothing),("Text.Blaze",Nothing)] ++ [(fname,Nothing)]
+  getLoadedModules
+  -- json $ display $ "Loaded module " ++ fname
 
 runHint :: MonadInterpreter m => String -> String -> m H.Html
 runHint expr fileurl = do
   files <- liftIO $ do
-             putStrLn $ "fileurl is " ++ show (lines fileurl)
-             mapM cacheFile (urls fileurl)
+    putStrLn $ "fileurl is " ++ show (lines fileurl)
+    mapM cacheUrl (urls fileurl)
   let allfiles = "Helper.hs" : files
   loadModules $ map (cachedir ++) allfiles
   setTopLevelModules $ map (takeWhile (/= '.')) allfiles
@@ -134,7 +142,6 @@ evaluate w expr = perform w $ do
 -- stopInterpreter :: Hint -> IO ()
 -}
 
-
 -- | Thread responsible for "running" a monad that can do IO.
 data Run m = Run { vRequest :: MVar (m ()) }
 
@@ -161,3 +168,41 @@ cleanShow ie = case ie of
                  WontCompile es -> unlines $ map errMsg es
                  NotAllowed e -> "NotAllowed\n" ++ e
                  GhcException e -> "GhcException\n" ++ e
+
+
+{--- output page goodies ---}
+defaultOutput :: H.Html
+defaultOutput = mempty
+
+wrap c = H.docTypeHtml $ do
+           H.head $ do
+             H.title "ghclive output"
+             H.link ! rel "stylesheet" ! type_ "text/css" ! src "style.css"
+             H.script "" ! type_ "text/javascript" ! src "jquery.js"
+             H.script "" ! type_ "text/javascript" ! src "http://localhost:9090/bdo"
+           H.body $ do
+             H.p $ "ghclive output"
+             c
+
+filenameFromUrl = reverse . takeWhile (/= '/') . reverse
+
+cacheUrl fileurl = do
+  putStrLn ("cacheFile got " ++ fileurl)
+  Right doc <- openURI fileurl
+  BS.writeFile (cachedir ++ fname) doc -- is wrong if filename /= module name!
+  return fname
+      where fname = filenameFromUrl fileurl
+
+cacheFile f = do
+  writeFile (cachedir ++ fname ++ ".hs") f
+  return fname
+    where fname = filenameFromText f
+
+-- this ugly hack WILL fail with PRAGMAs at the top of the file! fix it later!
+filenameFromText f = head . take 1 . drop 1 . words . head . take 1 $ lines f
+
+listmatch a b = and $ zipWith (==) a b
+
+urls fbox = filter (listmatch "http://") $ lines fbox
+
+mods fbox = filter (isUpper . head) $ lines fbox -- blows up with empty lines?

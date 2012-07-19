@@ -4,10 +4,9 @@
     <link rel="stylesheet" type="text/css" href="style.css" media="screen">
     <script type="text/javascript" src="jquery.js"></script>
     <script type="text/javascript" src="jquery.console.js"></script>
-    <script type="text/javascript" src="http://localhost:9090/bdo"></script>
     <script type="text/javascript" src="hintconsole.js"></script>
     <!-- sharejs + codemirror -->
-    <link rel="stylesheet" href="http://localhost:8000/lib/cm/lib/codemirror.css">
+    <link rel="stylesheet" href="http://c-71-207-252-122.hsd1.al.comcast.net:8000/lib/cm/lib/codemirror.css">
 
   </head>
   <body>
@@ -22,18 +21,18 @@
   </div>
 </div>
 
-    <script src="http://localhost:8000/lib/cm/lib/codemirror.js"></script>
-    <script src="http://localhost:8000/lib/cm/mode/haskell/haskell.js"></script>
-    <script src="http://localhost:8000/channel/bcsocket.js"></script>
-    <script src="http://localhost:8000/share/share.uncompressed.js"></script>
-    <script src="http://localhost:8000/share/cm.js"></script>
+    <script src="http://c-71-207-252-122.hsd1.al.comcast.net:8000/lib/cm/lib/codemirror.js"></script>
+    <script src="http://c-71-207-252-122.hsd1.al.comcast.net:8000/lib/cm/mode/haskell/haskell.js"></script>
+    <script src="http://c-71-207-252-122.hsd1.al.comcast.net:8000/channel/bcsocket.js"></script>
+    <script src="http://c-71-207-252-122.hsd1.al.comcast.net:8000/share/share.uncompressed.js"></script>
+    <script src="http://c-71-207-252-122.hsd1.al.comcast.net:8000/share/cm.js"></script>
     <script>
 var doc = null, editor = null;
 
 function setDoc(docName) {
   document.title = docName;
 
-  sharejs.open(docName, 'text', 'http://localhost:8000/channel', function(error, newDoc) {
+  sharejs.open(docName, 'text', 'http://c-71-207-252-122.hsd1.al.comcast.net:8000/channel', function(error, newDoc) {
       if (doc !== null) {
           doc.close();
           doc.detach_ace();
