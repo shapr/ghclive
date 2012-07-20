@@ -7,7 +7,7 @@
     <script type="text/javascript" src="hintconsole.js"></script>
     <!-- sharejs + codemirror -->
     <link rel="stylesheet" href="http://c-71-207-252-122.hsd1.al.comcast.net:8000/lib/cm/lib/codemirror.css">
-
+    </script>
   </head>
   <body>
     <!-- I wouldn't call it pretty, but it does work -->
@@ -50,7 +50,14 @@ function setDoc(docName) {
 
 window.onload = function() {
   var ed = document.getElementById('editor');
-  editor = CodeMirror(document.body, { mode: "haskell", tabSize: 2 });
+  //editor = CodeMirror(document.body, { mode: "haskell", tabSize: 2 });
+  editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+    mode: "haskell", 
+    tabSize: 2,
+    lineNumbers:true,
+    indentUnit: 4,
+    matchBrackets: true
+  });
 
   setDoc('cm');  // Hooking ShareJS and CodeMirror for the first time.
 
@@ -68,12 +75,10 @@ window.onload = function() {
 };
     </script>
 <!-- end sharejs + codemirror -->
+<form id="source">
+  <textarea id="editor" class="editor" name="editor" > This should be the editor widget </textarea>
+<input id="load" type="button" value="Load Module"/>
+</form>
 
-<div id="editor" > This should be the editor widget </div>
-<script type="text/javascript">
-  $("#load").click(function() {
-  alert("oh hai there");
-  }
-</script>
   </body>
 </html>
