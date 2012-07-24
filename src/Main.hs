@@ -68,8 +68,12 @@ main = do
           liftIO $ modifyMVar_ ref (happend e displayres)
           json $ display displayres
 
-    get "/load" $ do
-      f <- param "module"
+    post "/load" $ do
+      s <- param "editor"
+      html $ s
+
+    post "/toad" $ do
+      f <- param "editor"
       t <- liftIO . performHint hint $ moduleHint f
       case t of
         Left error -> do

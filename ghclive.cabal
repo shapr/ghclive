@@ -31,29 +31,29 @@ build-type:          Simple
 cabal-version:       >=1.8
 Library
   -- Other library packages from which modules are imported.
-  build-depends:       
-    base ==4.5.*, 
-    mtl ==2.0.*, 
-    text ==0.11.*, 
-    wai ==1.2.*, 
-    wai-extra ==1.2.*, 
-    wai-middleware-static ==0.1.*, 
-    blaze-html ==0.5.*, 
-    scotty ==0.4.*, 
-    hint ==0.3.*, 
-    download-curl ==0.1.*, 
-    bytestring ==0.9.*, 
-    aeson ==0.6.*, 
-    time ==1.4.*, 
-    diagrams-svg ==0.3.*, 
-    diagrams-lib ==0.5.*, 
+  build-depends:
+    base ==4.5.*,
+    mtl ==2.0.*,
+    text ==0.11.*,
+    wai ==1.2.*,
+    wai-extra ==1.2.*,
+    wai-middleware-static ==0.1.*,
+    blaze-html ==0.5.*,
+    scotty ==0.4.4,
+    hint ==0.3.*,
+    download-curl ==0.1.*,
+    bytestring ==0.9.*,
+    aeson ==0.6.*,
+    time ==1.4.*,
+    diagrams-svg ==0.3.*,
+    diagrams-lib ==0.5.*,
     blaze-markup ==0.5.*
 
   -- Directories containing source files.
   hs-source-dirs:      src
   exposed-modules: Network.Web.GHCLive.Display
 
-  
+
 executable ghclive
   -- .hs or .lhs file containing the Main module.
   main-is: Main.hs
@@ -61,22 +61,22 @@ executable ghclive
   -- Modules included in this executable, other than Main.
 
   -- Other library packages from which modules are imported.
-  build-depends:       
-    base ==4.5.*, 
-    mtl ==2.0.*, 
-    text ==0.11.*, 
-    wai ==1.2.*, 
-    wai-extra ==1.2.*, 
-    wai-middleware-static ==0.1.*, 
-    blaze-html ==0.5.*, 
-    scotty ==0.4.*, 
-    hint ==0.3.*, 
-    download-curl ==0.1.*, 
-    bytestring ==0.9.*, 
-    aeson ==0.6.*, 
-    time ==1.4.*, 
-    diagrams-svg ==0.3.*, 
-    diagrams-lib ==0.5.*, 
+  build-depends:
+    base ==4.5.*,
+    mtl ==2.0.*,
+    text ==0.11.*,
+    wai ==1.2.*,
+    wai-extra ==1.2.*,
+    wai-middleware-static ==0.1.*,
+    blaze-html ==0.5.*,
+    scotty ==0.4.4,
+    hint ==0.3.*,
+    download-curl ==0.1.*,
+    bytestring ==0.9.*,
+    aeson ==0.6.*,
+    time ==1.4.*,
+    diagrams-svg ==0.3.*,
+    diagrams-lib ==0.5.*,
     blaze-markup ==0.5.*
 
   -- Directories containing source files.

@@ -7,12 +7,16 @@
     <script type="text/javascript" src="hintconsole.js"></script>
     <!-- sharejs + codemirror -->
     <link rel="stylesheet" href="http://c-71-207-252-122.hsd1.al.comcast.net:8000/lib/cm/lib/codemirror.css">
+    <script type="text/javascript">
+      
+
     </script>
   </head>
   <body>
     <!-- I wouldn't call it pretty, but it does work -->
     <form action="/hint" method="get">
       <input type="text" id="fileurl" name="fileurl"/>File to load<br/>
+      <input id="testclick" type="button" value="tesclick"/>
     </form>
 
 <div id="header">
@@ -26,6 +30,11 @@
     <script src="http://c-71-207-252-122.hsd1.al.comcast.net:8000/channel/bcsocket.js"></script>
     <script src="http://c-71-207-252-122.hsd1.al.comcast.net:8000/share/share.uncompressed.js"></script>
     <script src="http://c-71-207-252-122.hsd1.al.comcast.net:8000/share/cm.js"></script>
+<form id="source">
+  <textarea id="editor" class="editor" name="editor" > This should be the editor widget </textarea>
+  <input id="load" type="button" value="Load Module"/>
+</form>
+
     <script>
 var doc = null, editor = null;
 
@@ -73,12 +82,21 @@ window.onload = function() {
       namefield.attachEvent('oninput', fn);
   }
 };
+      $("#testclick").click(function() {
+      alert("Handler for #load.click() called");
+      });
+
+      $("#load").click(function() {
+         $("#editor").val(editor.getValue());
+         var serData = $("#source").serialize();
+         // alert(serData);
+         $.post('/load', serData, function (data) {
+           alert(data);
+         });
+         return false;
+      });
     </script>
 <!-- end sharejs + codemirror -->
-<form id="source">
-  <textarea id="editor" class="editor" name="editor" > This should be the editor widget </textarea>
-<input id="load" type="button" value="Load Module"/>
-</form>
 
   </body>
 </html>
