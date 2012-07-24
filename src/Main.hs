@@ -1,17 +1,17 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, TemplateHaskell, QuasiQuotes, MultiParamTypeClasses, TypeFamilies #-}
 module Main where
 import           Control.Monad.Trans
 import qualified Data.ByteString                      as BS
+import           Data.Maybe                           (fromMaybe)
 import           Data.Monoid
 import qualified Data.Text.Lazy                       as T
 import           Language.Haskell.Interpreter         hiding (get)
 import           Network.Curl.Download
-import           Network.Wai
-import           Network.Wai.Middleware.RequestLogger
-import           Network.Wai.Middleware.Static
 import qualified Text.Blaze.Html5                     as H
 import           Text.Blaze.Html5.Attributes          (class_, href, rel, src, type_)
-import           Web.Scotty
+import           Yesod
+import           Yesod.Static
+import           Network.Wai.Handler.Warp (runSettings, Settings(..), defaultSettings)
 
 import           Control.Concurrent
 import           Control.Concurrent.MVar
@@ -32,6 +32,26 @@ import           Text.Blaze.Renderer.Text             (renderMarkup)
 
 cachedir = "cache/"
 
+type Hint = Run (InterpreterT IO)
+data Run m = Run { vRequest :: MVar (m ()) }
+
+data GHCLive = GHCLive
+                { ref       :: MVar H.Html
+                , hint      :: Hint
+                , getStatic :: Static
+                }
+
+staticSite = static "static"
+$(staticFiles "static")
+
+mkYesod "GHCLive" [parseRoutes|
+/       RootR   GET
+/output OutputR GET
+/eval   EvalR   GET
+/static StaticR Static getStatic
+|]
+
+instance Yesod GHCLive
 
 -- (modifyMVar_) :: MVar a -> (a -> IO a) -> IO ()
 happend :: String -> H.Html -> (H.Html -> IO H.Html)
@@ -41,59 +61,55 @@ happend expr adds content = return $ mconcat [content,
                                               H.p $ H.div adds ! class_ "hint-res"
                                               ]
 
-main :: IO()
+main :: IO ()
 main = do
-  ref <- newMVar defaultOutput
-  scotty 3000 $ do
-    hint <- liftIO newHint
-    middleware logStdoutDev -- serves jquery.js and clock.js from static/
-    middleware $ staticRoot "static"
-    middleware $ staticRoot "examples"
-    middleware $ staticRoot "webclient"
+  r  <- newMVar defaultOutput
+  h  <- newHint
+  st <- staticSite
+  runSettings defaultSettings =<< toWaiApp (GHCLive r h st)
 
-    get "/" $ file "static/hint.html"
+getRootR :: Handler RepHtml
+getRootR = sendFile typeHtml "static/hint.html"
 
-    get "/output" $ do
-      h <- liftIO $ readMVar ref
-      html . renderMarkup $ wrap h
+getOutputR :: Handler RepHtml
+getOutputR = do
+  y <- getYesod
+  h <- liftIO $ readMVar (ref y)
+  defaultLayout $ do
+    addScript (StaticR jquery_js)
+    addScriptRemote "http://localhost:9090/bdo"
+    setTitle "ghclive output"
+    [whamlet|
+      <p>ghclive output
+      #{h}
+    |]
 
-    get "/eval" $ do
-      e <- param "expr"
-      t <- liftIO . performHint hint $ interpretHint e
-      case t of
-        Left error -> do
-          liftIO $ modifyMVar_ ref (happend e (H.toMarkup $ cleanShow error))
-          json . display $ cleanShow error
-        Right displayres -> do
-          liftIO $ modifyMVar_ ref (happend e displayres)
-          json $ display displayres
+getEvalR :: Handler RepJson
+getEvalR = do
+  y <- getYesod
+  e <- ST.unpack . fromMaybe "" <$> lookupGetParam "expr"
+  t <- liftIO . performHint (hint y) $ interpretHint e
+  case t of
+    Left error -> do
+             liftIO $ modifyMVar_ (ref y) (happend e (H.toMarkup $ cleanShow error))
+             jsonToRepJson . display $ cleanShow error
+    Right displayres -> do
+             liftIO $ modifyMVar_ (ref y) (happend e displayres)
+             jsonToRepJson $ display displayres
 
-    post "/load" $ do
-      s <- param "editor"
-      html $ s
-
-    post "/toad" $ do
-      f <- param "editor"
-      t <- liftIO . performHint hint $ moduleHint f
-      case t of
-        Left error -> do
-          -- liftIO $ modifyMVar_ ref (happend t (H.toMarkup $ cleanShow error))
-          json $ cleanShow error
-        Right displayres -> do
-          -- liftIO $ modifyMVar_ ref (happend t displayres)
-          json displayres
-
-    get "/hint" $ do
-      u <- param "fileurl"
-      e <- param "expr"
-      t <- liftIO . performHint hint $ runHint e u
-      case t of
-        Left error -> do
-          liftIO $ modifyMVar_ ref (happend e (H.toMarkup $ cleanShow error))
-          json . display $ cleanShow error
-        Right displayres -> do
-          liftIO $ modifyMVar_ ref (happend e displayres)
-          json $ display displayres
+getLoadR :: Handler RepJson
+getLoadR = do
+  y <- getYesod
+  u <- ST.unpack . fromMaybe "" <$> lookupGetParam "fileurl"
+  e <- ST.unpack . fromMaybe "" <$> lookupGetParam "expr"
+  t <- liftIO . performHint (hint y) $ runHint e u
+  case t of
+    Left error -> do
+             liftIO $ modifyMVar_ (ref y) (happend e (H.toMarkup $ cleanShow error))
+             jsonToRepJson . display $ cleanShow error
+    Right displayres -> do
+             liftIO $ modifyMVar_ (ref y) (happend e displayres)
+             jsonToRepJson $ display displayres
 
 interpretHint :: (Typeable a, MonadInterpreter m) => String -> m a
 interpretHint expr = do
@@ -128,8 +144,6 @@ runHint expr fileurl = do
 {-----------------------------------------------------------------------------
     Interpreter abstraction
 ------------------------------------------------------------------------------}
-type Hint = Run (InterpreterT IO)
-
 newHint :: IO Hint
 newHint = newRun $ void . runInterpreter
 
@@ -147,8 +161,6 @@ evaluate w expr = perform w $ do
 -}
 
 -- | Thread responsible for "running" a monad that can do IO.
-data Run m = Run { vRequest :: MVar (m ()) }
-
 perform :: MonadIO m => Run m -> m a -> IO a
 perform run act = do
     ref <- newEmptyMVar
@@ -177,16 +189,6 @@ cleanShow ie = case ie of
 {--- output page goodies ---}
 defaultOutput :: H.Html
 defaultOutput = mempty
-
-wrap c = H.docTypeHtml $ do
-           H.head $ do
-             H.title "ghclive output"
-             H.link ! rel "stylesheet" ! type_ "text/css" ! src "style.css"
-             H.script "" ! type_ "text/javascript" ! src "jquery.js"
-             H.script "" ! type_ "text/javascript" ! src "http://localhost:9090/bdo"
-           H.body $ do
-             H.p $ "ghclive output"
-             c
 
 filenameFromUrl = reverse . takeWhile (/= '/') . reverse
 

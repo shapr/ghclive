@@ -32,14 +32,16 @@ cabal-version:       >=1.8
 Library
   -- Other library packages from which modules are imported.
   build-depends:
-    base ==4.5.*,
-    mtl ==2.0.*,
+    base >= 4 && < 5,
+    mtl >= 2.0 && < 3,
     text ==0.11.*,
     wai ==1.2.*,
     wai-extra ==1.2.*,
-    wai-middleware-static ==0.1.*,
     blaze-html ==0.5.*,
-    scotty ==0.4.4,
+    yesod == 1.0.*,
+    yesod-core == 1.0.*,
+    yesod-static == 1.0.*,
+    warp == 1.2.*,
     hint ==0.3.*,
     download-curl ==0.1.*,
     bytestring ==0.9.*,
@@ -62,14 +64,16 @@ executable ghclive
 
   -- Other library packages from which modules are imported.
   build-depends:
-    base ==4.5.*,
-    mtl ==2.0.*,
+    base >= 4 && < 5,
+    mtl >= 2.0 && < 3,
     text ==0.11.*,
     wai ==1.2.*,
     wai-extra ==1.2.*,
-    wai-middleware-static ==0.1.*,
     blaze-html ==0.5.*,
-    scotty ==0.4.4,
+    yesod == 1.0.*,
+    yesod-core == 1.0.*,
+    yesod-static == 1.0.*,
+    warp == 1.2.*,
     hint ==0.3.*,
     download-curl ==0.1.*,
     bytestring ==0.9.*,
