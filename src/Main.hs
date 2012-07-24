@@ -48,6 +48,7 @@ mkYesod "GHCLive" [parseRoutes|
 /       RootR   GET
 /output OutputR GET
 /eval   EvalR   GET
+/load   LoadR   POST
 /static StaticR Static getStatic
 |]
 
@@ -97,19 +98,16 @@ getEvalR = do
              liftIO $ modifyMVar_ (ref y) (happend e displayres)
              jsonToRepJson $ display displayres
 
-getLoadR :: Handler RepJson
-getLoadR = do
+postLoadR :: Handler RepJson
+postLoadR = do
   y <- getYesod
-  u <- ST.unpack . fromMaybe "" <$> lookupGetParam "fileurl"
-  e <- ST.unpack . fromMaybe "" <$> lookupGetParam "expr"
-  t <- liftIO . performHint (hint y) $ runHint e u
+  f <- ST.unpack . fromMaybe "" <$> lookupPostParam "editor"
+  t <- liftIO . performHint (hint y) $ moduleHint f
   case t of
     Left error -> do
-             liftIO $ modifyMVar_ (ref y) (happend e (H.toMarkup $ cleanShow error))
-             jsonToRepJson . display $ cleanShow error
+             jsonToRepJson $ cleanShow error
     Right displayres -> do
-             liftIO $ modifyMVar_ (ref y) (happend e displayres)
-             jsonToRepJson $ display displayres
+             jsonToRepJson displayres
 
 interpretHint :: (Typeable a, MonadInterpreter m) => String -> m a
 interpretHint expr = do
