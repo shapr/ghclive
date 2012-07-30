@@ -1,32 +1,36 @@
-{-# LANGUAGE OverloadedStrings, TemplateHaskell, QuasiQuotes, MultiParamTypeClasses, TypeFamilies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE QuasiQuotes           #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TypeFamilies          #-}
 module Main where
 import           Control.Monad.Trans
-import qualified Data.ByteString                      as BS
-import           Data.Maybe                           (fromMaybe)
+import qualified Data.ByteString              as BS
+import           Data.Maybe                   (fromMaybe)
 import           Data.Monoid
-import qualified Data.Text.Lazy                       as T
-import           Language.Haskell.Interpreter         hiding (get)
+import qualified Data.Text.Lazy               as T
+import           Language.Haskell.Interpreter hiding (get)
 import           Network.Curl.Download
-import qualified Text.Blaze.Html5                     as H
-import           Text.Blaze.Html5.Attributes          (class_, href, rel, src, type_)
+import           Network.Wai.Handler.Warp     (Settings(..), defaultSettings, runSettings)
+import qualified Text.Blaze.Html5             as H
+import           Text.Blaze.Html5.Attributes  (class_, href, rel, src, type_)
 import           Yesod
 import           Yesod.Static
-import           Network.Wai.Handler.Warp (runSettings, Settings(..), defaultSettings)
 
 import           Control.Concurrent
 import           Control.Concurrent.MVar
-import           Control.Monad                        (forever, liftM, void)
+import           Control.Monad                (forever, liftM, void)
 import           Control.Monad.Error.Class
-import           Data.Aeson                           ((.=))
-import qualified Data.Aeson                           as A
-import           Data.Char                            (isUpper)
-import qualified Data.Text                            as ST
+import           Data.Aeson                   ((.=))
+import qualified Data.Aeson                   as A
+import           Data.Char                    (isUpper)
+import qualified Data.Text                    as ST
 import           Data.Typeable
 import           Diagrams.Backend.SVG
 import           Diagrams.Prelude
 import           Network.Web.GHCLive.Display
 import           Text.Blaze
-import           Text.Blaze.Renderer.Text             (renderMarkup)
+import           Text.Blaze.Renderer.Text     (renderMarkup)
 
 
 
@@ -36,7 +40,7 @@ type Hint = Run (InterpreterT IO)
 data Run m = Run { vRequest :: MVar (m ()) }
 
 data GHCLive = GHCLive
-                { ref       :: MVar H.Html
+                { ref       :: MVar H.Html -- [H.Html]
                 , hint      :: Hint
                 , getStatic :: Static
                 }
@@ -62,6 +66,13 @@ happend expr adds content = return $ mconcat [content,
                                               H.p $ H.div adds ! class_ "hint-res"
                                               ]
 
+-- happend' :: [H.Html] -> Widget
+-- happend' expr adds content = return $ mconcat [content,
+--                                                H.div "hint> " ! class_ "hint-prompt",
+--                                                H.div (H.toMarkup expr) ! class_ "hint-expr",
+--                                                H.p $ H.div adds ! class_ "hint-res"
+--                                               ]
+
 main :: IO ()
 main = do
   r  <- newMVar defaultOutput
@@ -69,8 +80,6 @@ main = do
   st <- staticSite
   runSettings defaultSettings =<< toWaiApp (GHCLive r h st)
 
-getRootR :: Handler RepHtml
-getRootR = sendFile typeHtml "static/hint.html"
 
 getOutputR :: Handler RepHtml
 getOutputR = do
@@ -210,3 +219,92 @@ listmatch a b = and $ zipWith (==) a b
 urls fbox = filter (listmatch "http://") $ lines fbox
 
 mods fbox = filter (isUpper . head) $ lines fbox -- blows up with empty lines?
+
+getRootR :: Handler RepHtml
+getRootR = do
+  defaultLayout $ do
+    addScript (StaticR jquery_js)
+    addScript (StaticR jquery_console_js)
+    addScript (StaticR hintconsole_js)
+    addStylesheetRemote "http://c-71-207-252-122.hsd1.al.comcast.net:8000/lib/cm/lib/codemirror.css"
+    addStylesheet $ StaticR style_css
+    addScriptRemote "http://localhost:9090/bdo"
+    addScriptRemote "http://c-71-207-252-122.hsd1.al.comcast.net:8000/lib/cm/lib/codemirror.js"
+    addScriptRemote "http://c-71-207-252-122.hsd1.al.comcast.net:8000/lib/cm/mode/haskell/haskell.js"
+    addScriptRemote "http://c-71-207-252-122.hsd1.al.comcast.net:8000/channel/bcsocket.js"
+    addScriptRemote "http://c-71-207-252-122.hsd1.al.comcast.net:8000/share/share.uncompressed.js"
+    addScriptRemote "http://c-71-207-252-122.hsd1.al.comcast.net:8000/share/cm.js"
+    toWidget [julius|
+    var doc = null, editor = null;
+
+function setDoc(docName) {
+  document.title = docName;
+
+  sharejs.open(docName, 'text', 'http://c-71-207-252-122.hsd1.al.comcast.net:8000/channel', function(error, newDoc) {
+      if (doc !== null) {
+          doc.close();
+          doc.detach_ace();
+      }
+
+      doc = newDoc;
+
+      if (error) {
+          console.error(error);
+          return;
+      }
+      doc.attach_cm(editor);
+  });
+};
+
+window.onload = function() {
+  var ed = document.getElementById('editor');
+  //editor = CodeMirror(document.body, { mode: "haskell", tabSize: 2 });
+  editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+    mode: "haskell",
+    tabSize: 2,
+    lineNumbers:true,
+    indentUnit: 4,
+    matchBrackets: true
+  });
+
+  setDoc('cm');  // Hooking ShareJS and CodeMirror for the first time.
+
+  var namefield = document.getElementById('namefield');
+  function fn() {
+      var docName = namefield.value;
+      if (docName) setDoc(docName);
+  }
+
+  if (namefield.addEventListener) {
+      namefield.addEventListener('input', fn, false);
+  } else {
+      namefield.attachEvent('oninput', fn);
+  }
+};
+      $("#testclick").click(function() {
+      alert("Handler for #load.click() called");
+      });
+
+      $("#load").click(function() {
+         $("#editor").val(editor.getValue());
+         var serData = $("#source").serialize();
+         // alert(serData);
+         $.post('/load', serData, function (data) {
+           alert(data);
+         });
+         return false;
+      });
+      |]
+    setTitle "ghclive output"
+    [whamlet|
+      <form action=/hint method=get>
+        <input type=text id=fileurl name=fileurl> File to load
+      <div id=header>
+        <div id="htext">
+          <b>Editing
+            <input type=text value=cm id=namefield>
+      <form id=source>
+        <textarea id=editor class=editor name=editor>
+        <input id=load type=button value=Load Module>
+      <p>ghclive output
+    |]

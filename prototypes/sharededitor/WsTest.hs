@@ -1,43 +1,43 @@
-{-# LANGUAGE TemplateHaskell,
-             QuasiQuotes,
-             OverloadedStrings,
-             TypeFamilies,
-             MultiParamTypeClasses,
-             GeneralizedNewtypeDeriving,
-             FlexibleContexts,
-             ScopedTypeVariables
-  #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE QuasiQuotes                #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE TypeFamilies               #-}
 module Main where
 
-import           Yesod
-import           Yesod.Static
-import           Control.Applicative ((<$>),(<*>))
-import           Control.Concurrent.Chan (Chan, newChan)
-import           Network.Wai.Handler.Warp (runSettings, Settings(..), defaultSettings)
-import           Data.Text (Text)
-import qualified Data.Text.Lazy                 as TL
-import qualified Data.HashMap.Strict            as HM
-import           Data.Map (Map)
-import qualified Data.Map                       as M
-import           Data.Maybe (isJust)
-import           Data.Set (Set)
-import qualified Data.Set                       as S
-import qualified Network.WebSockets             as WS
-import qualified Network.Wai.Handler.WebSockets as WS
-import qualified Data.Aeson.Types               as J
-import qualified Data.Aeson                     as J
-import           Data.Aeson ((.:))
-import           Data.Time.Clock (getCurrentTime, UTCTime)
-import           Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
-import qualified Data.Vector                    as V
-import           Control.Monad (forever, forM_, liftM, mzero)
-import           Control.Monad.IO.Class
-import           Control.Concurrent (forkIO)
+import           Control.Applicative            ((<$>), (<*>))
+import           Control.Concurrent             (forkIO)
+import           Control.Concurrent.Chan        (Chan, newChan)
 import           Control.Concurrent.Chan
 import           Control.Concurrent.MVar
+import           Control.Monad                  (forM_, forever, liftM, mzero)
+import           Control.Monad.IO.Class
+import           Data.Aeson                     ((.:))
+import qualified Data.Aeson                     as J
+import qualified Data.Aeson.Types               as J
+import qualified Data.HashMap.Strict            as HM
+import           Data.Map                       (Map)
+import qualified Data.Map                       as M
+import           Data.Maybe                     (isJust)
+import           Data.Set                       (Set)
+import qualified Data.Set                       as S
+import           Data.Text                      (Text)
+import qualified Data.Text.Lazy                 as TL
+import           Data.Time.Clock                (UTCTime, getCurrentTime)
+import           Data.Time.Clock.POSIX          (utcTimeToPOSIXSeconds)
+import qualified Data.Vector                    as V
+import           Network.Wai.Handler.Warp       (Settings(..), defaultSettings, runSettings)
+import qualified Network.Wai.Handler.WebSockets as WS
+import qualified Network.WebSockets             as WS
+import           Yesod
+import           Yesod.Static
 
 import qualified SeqMap                         as SM
 
+-- inefficiently, [(AtomId,TextAtom)]
 type Document = SM.SeqMap AtomId TextAtom
 
 emptyDoc = SM.singleton (AtomId (Timestamp 0) (ClientId 0)) (TextAtom ' ' (Just (Timestamp 0)))
@@ -48,6 +48,7 @@ newtype Timestamp = Timestamp { unTimestamp :: Integer }
 newtype ClientId  = ClientId  { unClientId  :: Integer }
     deriving (Eq, Ord, Show, Enum, J.ToJSON, J.FromJSON)
 
+-- Char, and whether this Char has been removed
 data TextAtom = TextAtom
     { taCh      :: Char
     , taRemoved :: Maybe Timestamp
@@ -56,6 +57,7 @@ data TextAtom = TextAtom
 mkTa :: Char -> TextAtom
 mkTa ch = TextAtom ch Nothing
 
+-- a Client never makes two IDs with the same timestamp
 data AtomId    = AtomId
                   { aiTime :: Timestamp
                   , aiClient :: ClientId
@@ -320,14 +322,14 @@ editSocket e = do
   sink <- WS.getSink
   ch <- liftIO newChan
   t <- liftIO getTimestamp
-  liftIO $ addClient e (Client t client ch) 
+  liftIO $ addClient e (Client t client ch)
   tid <- liftIO . forkIO . forever $ do
     acts <- readChan ch
     sendSinkJson sink acts
-  forever $ do 
+  forever $ do
     (OpBlock acts) <- receiveJson
     liftIO $ applyOps e acts
-    liftIO $ mapM print acts 
+    liftIO $ mapM print acts
     return ()
   liftIO $ removeClient e client
   return ()

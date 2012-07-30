@@ -6,7 +6,7 @@ report = alert
 function getResult(fileurl, expr){
     var res = null;
     $.ajax({
-        url: '/hint',
+        url: '/eval',
         type: 'get',
         data : { 'expr':expr,'fileurl':fileurl},
         dataType : 'json',
