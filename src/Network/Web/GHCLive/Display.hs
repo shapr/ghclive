@@ -35,15 +35,27 @@ renderMyDiagramToSvg     :: Diagram SVG R2 -> Html
 renderMyDiagramToSvg dia = renderDia SVG (SVGOptions "output.file" (Dims 200 200)) (dia :: Diagram Diagrams.Backend.SVG.SVG R2)
 
 instance Display (Diagram SVG R2) where
-    display d = DisplayResult { clientType="svg", result=renderHtml $ renderMyDiagramToSvg d, resources = []}
+  display d = DisplayResult { clientType="svg", result=renderHtml $ renderMyDiagramToSvg d, resources = []}
 
 instance Display Text where
-    display d = DisplayResult { clientType="text", result= d, resources = []}
+  display d = DisplayResult { clientType="text", result= d, resources = []}
 
 instance Display String where
-    display d = display $ pack d -- pack to Data.Text
+  display d = display $ pack d -- pack to Data.Text
+
+-- overlaps with String instance
+-- instance ToMarkup d => Display [d] where
+--   display d = display $ mconcat $ Prelude.map toHtml d
+
+instance Display [(Html,Html)] where
+  display d = display $ mconcat $ Prelude.map toHtml d
 
 instance Display Markup where
-    display d = DisplayResult{clientType="svg", result= renderHtml $ p d, resources =[] }
+  display d = DisplayResult{clientType="svg", result= renderHtml $ p d, resources =[] }
 
+instance (ToMarkup a, ToMarkup b) => Display (a,b) where
+  display (a,b) = display $ mconcat [toMarkup a,toMarkup b]
 -- Other useful instances?
+
+instance (ToMarkup a, ToMarkup b) => ToMarkup (a,b) where
+  toMarkup (a,b) = mconcat [toMarkup a,toMarkup b]

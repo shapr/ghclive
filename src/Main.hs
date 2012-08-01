@@ -1,4 +1,5 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverlappingInstances  #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE TemplateHaskell       #-}
@@ -40,7 +41,7 @@ type Hint = Run (InterpreterT IO)
 data Run m = Run { vRequest :: MVar (m ()) }
 
 data GHCLive = GHCLive
-                { ref       :: MVar H.Html -- [H.Html]
+                { ref       :: MVar [(H.Html,H.Html)]
                 , hint      :: Hint
                 , getStatic :: Static
                 }
@@ -57,21 +58,6 @@ mkYesod "GHCLive" [parseRoutes|
 |]
 
 instance Yesod GHCLive
-
--- (modifyMVar_) :: MVar a -> (a -> IO a) -> IO ()
-happend :: String -> H.Html -> (H.Html -> IO H.Html)
-happend expr adds content = return $ mconcat [content,
-                                              H.div "hint> " ! class_ "hint-prompt",
-                                              H.div (H.toMarkup expr) ! class_ "hint-expr",
-                                              H.p $ H.div adds ! class_ "hint-res"
-                                              ]
-
--- happend' :: [H.Html] -> Widget
--- happend' expr adds content = return $ mconcat [content,
---                                                H.div "hint> " ! class_ "hint-prompt",
---                                                H.div (H.toMarkup expr) ! class_ "hint-expr",
---                                                H.p $ H.div adds ! class_ "hint-res"
---                                               ]
 
 main :: IO ()
 main = do
@@ -91,20 +77,24 @@ getOutputR = do
     setTitle "ghclive output"
     [whamlet|
       <p>ghclive output
-      #{h}
+      $forall chunk <- h
+        <div class=hint-prompt>hint>
+        <div class=hint-expr>#{fst chunk}
+        <p>
+          <div class=hint-res>#{snd chunk}
     |]
 
 getEvalR :: Handler RepJson
 getEvalR = do
   y <- getYesod
-  e <- ST.unpack . fromMaybe "" <$> lookupGetParam "expr"
-  t <- liftIO . performHint (hint y) $ interpretHint e
+  e <- fromMaybe "" <$> lookupGetParam "expr"
+  t <- liftIO . performHint (hint y) $ interpretHint (ST.unpack e)
   case t of
     Left error -> do
-             liftIO $ modifyMVar_ (ref y) (happend e (H.toMarkup $ cleanShow error))
+             liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(H.toMarkup e,H.toMarkup $ cleanShow error)]) -- (happend e (H.toMarkup $ cleanShow error))
              jsonToRepJson . display $ cleanShow error
     Right displayres -> do
-             liftIO $ modifyMVar_ (ref y) (happend e displayres)
+             liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(H.toMarkup e,displayres)]) -- (happend e displayres)
              jsonToRepJson $ display displayres
 
 postLoadR :: Handler RepJson
@@ -194,7 +184,7 @@ cleanShow ie = case ie of
 
 
 {--- output page goodies ---}
-defaultOutput :: H.Html
+defaultOutput :: [(H.Html,H.Html)]
 defaultOutput = mempty
 
 filenameFromUrl = reverse . takeWhile (/= '/') . reverse
@@ -239,15 +229,12 @@ getRootR = do
 
 function setDoc(docName) {
   document.title = docName;
-
   sharejs.open(docName, 'text', 'http://c-71-207-252-122.hsd1.al.comcast.net:8000/channel', function(error, newDoc) {
       if (doc !== null) {
           doc.close();
           doc.detach_ace();
       }
-
       doc = newDoc;
-
       if (error) {
           console.error(error);
           return;
@@ -255,10 +242,8 @@ function setDoc(docName) {
       doc.attach_cm(editor);
   });
 };
-
 window.onload = function() {
   var ed = document.getElementById('editor');
-  //editor = CodeMirror(document.body, { mode: "haskell", tabSize: 2 });
   editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
     mode: "haskell",
     tabSize: 2,
@@ -266,15 +251,12 @@ window.onload = function() {
     indentUnit: 4,
     matchBrackets: true
   });
-
   setDoc('cm');  // Hooking ShareJS and CodeMirror for the first time.
-
   var namefield = document.getElementById('namefield');
   function fn() {
       var docName = namefield.value;
       if (docName) setDoc(docName);
   }
-
   if (namefield.addEventListener) {
       namefield.addEventListener('input', fn, false);
   } else {
