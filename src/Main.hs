@@ -38,16 +38,17 @@ import           Text.Blaze.Renderer.Text     (renderMarkup)
 import           Data.Aeson                     ((.:))
 import qualified Data.Aeson                     as J
 import qualified Data.Aeson.Types               as J
-import qualified Data.Vector                    as V
+import qualified Data.HashMap.Strict            as HM
 import           Data.Map                       (Map)
 import qualified Data.Map                       as M
-import qualified Network.Wai.Handler.WebSockets as WS
-import qualified Network.WebSockets             as WS
-import           Data.Text                      (Text)
 import           Data.Maybe                     (isJust)
-import qualified Data.HashMap.Strict            as HM
+import           Data.Text                      (Text)
 import           Data.Time.Clock                (UTCTime, getCurrentTime)
 import           Data.Time.Clock.POSIX          (utcTimeToPOSIXSeconds)
+import qualified Data.Vector                    as V
+import           Network.Wai
+import qualified Network.Wai.Handler.WebSockets as WS
+import qualified Network.WebSockets             as WS
 
 
 import qualified SeqMap                         as SM
@@ -142,12 +143,13 @@ main = do
   -- LOTR shared editor setup
   d  <- newMVar (emptyDoc, M.empty)
   u  <- newMVar (ClientId 0)
-  let master = GHCLive r h (Editor d u) st
+  let editor = (Editor d u)
+  let master = GHCLive r h editor st
       s      = defaultSettings
                { settingsPort = 3000
-               , settingsIntercept = WS.intercept (sockets master) -- XXX expecting an Editor?
+               , settingsIntercept = WS.intercept (sockets editor) -- XXX expecting an Editor?
                }
-  runSettings defaultSettings =<< toWaiApp master
+  runSettings defaultSettings =<< (toWaiApp master :: IO Yesod.Application)
 
 
 getOutputR :: Handler RepHtml

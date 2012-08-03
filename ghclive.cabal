@@ -36,7 +36,8 @@ Library
     mtl >= 2.0 && < 3,
     text ==0.11.*,
     wai ==1.2.0.3,
-    wai-extra ==1.2.*,
+    wai-extra ==1.2.0.3,
+    wai-websockets ==1.2.0.3,
     blaze-html ==0.5.*,
     yesod == 1.0.*,
     yesod-core == 1.0.*,
@@ -52,8 +53,9 @@ Library
     blaze-markup ==0.5.*,
     yesod-platform == 1.0.6,
     websockets == 0.6.0.3,
-    wai-websockets ==1.2.0.3,
-    conduit == 0.4.2
+    conduit == 0.4.2,
+    unordered-containers any,
+    vector any
 
 
   -- Directories containing source files.
