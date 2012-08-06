@@ -150,7 +150,7 @@ main = do
                { settingsPort = 3000
                , settingsIntercept = WS.intercept (sockets editor) -- XXX expecting an Editor?
                }
-  runSettings defaultSettings =<< (toWaiApp master :: IO Yesod.Application)
+  runSettings s =<< (toWaiApp master :: IO Yesod.Application)
 
 getEchoR         :: Text -> Handler RepHtml
 getEchoR theText = do
