@@ -68,6 +68,8 @@ executable ghclive
   -- Modules included in this executable, other than Main.
 
   -- Other library packages from which modules are imported.
+  if !os(windows)
+    build-depends: unix
   build-depends:
     base >= 4 && < 5,
     mtl >= 2.0 && < 3,

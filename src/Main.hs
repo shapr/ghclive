@@ -52,7 +52,7 @@ import qualified Network.WebSockets             as WS
 
 
 import qualified SeqMap                         as SM
-
+import           SignalHandlers
 
 cachedir = "cache/"
 
@@ -234,7 +234,7 @@ runHint expr fileurl = do
     Interpreter abstraction
 ------------------------------------------------------------------------------}
 newHint :: IO Hint
-newHint = newRun $ void . runInterpreter
+newHint = newRun $ \a -> (void $ runInterpreter (liftIO restoreHandlers >> a))
 
 performHint :: Hint -> InterpreterT IO a -> IO (Either InterpreterError a)
 performHint hint act = perform hint $ do
