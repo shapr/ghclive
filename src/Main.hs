@@ -1,39 +1,39 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverlappingInstances  #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE QuasiQuotes           #-}
-{-# LANGUAGE TemplateHaskell       #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE OverlappingInstances       #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE QuasiQuotes                #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE TypeFamilies               #-}
 module Main where
 import           Control.Monad.Trans
-import qualified Data.ByteString              as BS
-import           Data.Maybe                   (fromMaybe)
+import qualified Data.ByteString                as BS
+import           Data.Maybe                     (fromMaybe)
 import           Data.Monoid
-import qualified Data.Text.Lazy               as T
-import           Language.Haskell.Interpreter hiding (get)
+import qualified Data.Text.Lazy                 as T
+import           Language.Haskell.Interpreter   hiding (get)
 import           Network.Curl.Download
-import           Network.Wai.Handler.Warp     (Settings(..), defaultSettings, runSettings)
-import qualified Text.Blaze.Html5             as H
-import           Text.Blaze.Html5.Attributes  (class_, href, rel, src, type_)
+import           Network.Wai.Handler.Warp       (Settings(..), defaultSettings, runSettings)
+import qualified Text.Blaze.Html5               as H
+import           Text.Blaze.Html5.Attributes    (class_, href, rel, src, type_)
 import           Yesod
 import           Yesod.Static
 
 import           Control.Concurrent
 import           Control.Concurrent.MVar
-import           Control.Monad                (forever, liftM, void)
+import           Control.Monad                  (forever, liftM, void)
 import           Control.Monad                  (forM_, forever, liftM, mzero)
 import           Control.Monad.Error.Class
-import           Data.Aeson                   ((.=))
-import qualified Data.Aeson                   as A
-import           Data.Char                    (isUpper)
-import qualified Data.Text                    as ST
+import           Data.Aeson                     ((.=))
+import qualified Data.Aeson                     as A
+import           Data.Char                      (isUpper)
+import qualified Data.Text                      as ST
 import           Data.Typeable
 import           Diagrams.Backend.SVG
 import           Diagrams.Prelude
 import           Network.Web.GHCLive.Display
 import           Text.Blaze
-import           Text.Blaze.Renderer.Text     (renderMarkup)
+import           Text.Blaze.Renderer.Text       (renderMarkup)
 
 import           Data.Aeson                     ((.:))
 import qualified Data.Aeson                     as J
@@ -130,6 +130,7 @@ mkYesod "GHCLive" [parseRoutes|
 /load   LoadR   POST
 /static StaticR Static getStatic
 /edit   EditR   GET
+/echo/#Text EchoR GET
 |]
 
 instance Yesod GHCLive
@@ -151,6 +152,12 @@ main = do
                }
   runSettings defaultSettings =<< (toWaiApp master :: IO Yesod.Application)
 
+getEchoR         :: Text -> Handler RepHtml
+getEchoR theText = do
+  defaultLayout $ do
+  [whamlet|
+     <h1> #{theText}
+  |]
 
 getOutputR :: Handler RepHtml
 getOutputR = do

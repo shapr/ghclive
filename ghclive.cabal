@@ -30,7 +30,6 @@ category:            Web
 build-type:          Simple
 cabal-version:       >=1.8
 Library
-  -- Other library packages from which modules are imported.
   build-depends:
     base >= 4 && < 5,
     mtl >= 2.0 && < 3,
@@ -51,12 +50,11 @@ Library
     diagrams-svg ==0.3.*,
     diagrams-lib ==0.5.*,
     blaze-markup ==0.5.*,
-    yesod-platform == 1.0.6,
     websockets == 0.6.0.3,
     conduit == 0.4.2,
-    unordered-containers any,
-    vector any
-
+    containers ==0.4.2.1,
+    unordered-containers > 0.2,
+    vector > 0.9
 
   -- Directories containing source files.
   hs-source-dirs:      src
@@ -88,7 +86,12 @@ executable ghclive
     time ==1.4.*,
     diagrams-svg ==0.3.*,
     diagrams-lib ==0.5.*,
-    blaze-markup ==0.5.*
+    blaze-markup ==0.5.*,
+    unordered-containers > 0.2,
+    containers > 0.4,
+    websockets > 0.6,
+    wai-websockets > 1,
+    vector > 0.9
 
   -- Directories containing source files.
   hs-source-dirs:      src
