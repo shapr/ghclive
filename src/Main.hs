@@ -8,7 +8,7 @@
 module Main where
 import           Control.Monad.Trans
 import qualified Data.ByteString                as BS
-import           Data.Maybe                     (fromMaybe, isNothing)
+import           Data.Maybe                     (fromMaybe, isJust, isNothing)
 import           Data.Monoid
 import qualified Data.Text.Lazy                 as T
 import           Language.Haskell.Interpreter   hiding (get)
@@ -21,11 +21,9 @@ import           Yesod.Static
 
 import           Control.Concurrent
 import           Control.Concurrent.MVar
-import           Control.Monad                  (forever, liftM, void)
-import           Control.Monad                  (forM_, forever, liftM, mzero)
+import           Control.Monad                  (forM_, forever, liftM, mzero, void)
 import           Control.Monad.Error.Class
-import           Data.Aeson                     ((.=))
-import qualified Data.Aeson                     as A
+import           Data.Aeson                     ((.:), (.=))
 import           Data.Char                      (isUpper)
 import qualified Data.Text                      as ST
 import           Data.Typeable
@@ -35,13 +33,11 @@ import           Network.Web.GHCLive.Display
 import           Text.Blaze
 import           Text.Blaze.Renderer.Text       (renderMarkup)
 
-import           Data.Aeson                     ((.:))
 import qualified Data.Aeson                     as J
 import qualified Data.Aeson.Types               as J
 import qualified Data.HashMap.Strict            as HM
 import           Data.Map                       (Map)
 import qualified Data.Map                       as M
-import           Data.Maybe                     (isJust)
 import           Data.Text                      (Text)
 import           Data.Time.Clock                (UTCTime, getCurrentTime)
 import           Data.Time.Clock.POSIX          (utcTimeToPOSIXSeconds)
@@ -146,7 +142,7 @@ main = do
   -- LOTR shared editor setup
   d  <- newMVar (emptyDoc, M.empty)
   u  <- newMVar (ClientId 0)
-  let editor = (Editor d u)
+  let editor = Editor d u
   let master = GHCLive r h editor st
       s      = defaultSettings
                { settingsPort = 3000
@@ -157,13 +153,11 @@ main = do
 getLoaderR = do
   y <- getYesod
   cs <- liftIO $ readMVar (doc $ editor y)
-  liftIO . putStrLn $ "doc2string result is " ++ (doc2string $ fst cs )
+  liftIO . putStrLn $ "doc2string result is " ++ doc2string (fst cs )
   t <- liftIO . performHint (hint y) $ moduleHint (doc2string $ fst cs)
   case t of
-    Left error -> do
-             jsonToRepJson $ cleanShow error
-    Right displayres -> do
-             jsonToRepJson displayres
+    Left error -> jsonToRepJson $ cleanShow error
+    Right displayres -> jsonToRepJson displayres
 
 getOutputR :: Handler RepHtml
 getOutputR = do
@@ -201,14 +195,11 @@ postLoadR = do
   f <- ST.unpack . fromMaybe "" <$> lookupPostParam "editor"
   t <- liftIO . performHint (hint y) $ moduleHint f
   case t of
-    Left error -> do
-             jsonToRepJson $ cleanShow error
-    Right displayres -> do
-             jsonToRepJson displayres
+    Left error -> jsonToRepJson $ cleanShow error
+    Right displayres -> jsonToRepJson displayres
 
 interpretHint :: (Typeable a, MonadInterpreter m) => String -> m a
-interpretHint expr = do
-  interpret expr as
+interpretHint expr = interpret expr as
 
 moduleHint :: MonadInterpreter m => String -> m [ModuleName]
 moduleHint ms = do
@@ -231,8 +222,7 @@ newHint :: IO Hint
 newHint = newRun $ \a -> (void $ runInterpreter (liftIO restoreHandlers >> a))
 
 performHint :: Hint -> InterpreterT IO a -> IO (Either InterpreterError a)
-performHint hint act = perform hint $ do
-                         (Right `liftM` act) `catchError` (return . Left) -- can no longer do C-c !
+performHint hint act = perform hint $ (Right `liftM` act) `catchError` (return . Left)
 {-
 loadFile :: Hint -> FilePath -> IO ()
 loadFile w filepath = perform w $ do
@@ -258,7 +248,7 @@ newRun f = do
     forkIO . f . forever $ do
         act <- liftIO $ takeMVar vRequest
         act
-    return $ Run { vRequest = vRequest }
+    return Run { vRequest = vRequest }
 
 
 cleanShow    :: InterpreterError -> String
@@ -278,8 +268,7 @@ cacheFile f = do
   return "Main.hs"
 
 getRootR :: Handler RepHtml
-getRootR = do
-  defaultLayout $ do
+getRootR = defaultLayout $ do
     addScript (StaticR jquery_js)
     addScript (StaticR jquery_console_js)
     addScript (StaticR hintconsole_js)
