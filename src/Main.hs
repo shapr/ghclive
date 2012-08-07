@@ -224,12 +224,12 @@ moduleHint :: MonadInterpreter m => String -> m [ModuleName]
 moduleHint ms = do
   -- save the file
   fname <- liftIO $ cacheFile ms
-  let allfiles = "Helper.hs" : [fname]
+  let allfiles = ["Helper.hs", fname]
   loadModules $ map (cachedir ++) allfiles
-  setTopLevelModules $ map (takeWhile (/= '.')) allfiles
-  setImportsQ $ [("Prelude",Nothing),("Network.Web.GHCLive.Display",Nothing),("Text.Blaze",Nothing)] ++ [(fname,Nothing)]
-  getLoadedModules
-  -- json $ display $ "Loaded module " ++ fname
+  ms <- getLoadedModules
+  setTopLevelModules ms
+  setImports $ ["Prelude", "Network.Web.GHCLive.Display", "Text.Blaze"] ++ ms
+  return ms
 
 runHint :: MonadInterpreter m => String -> String -> m H.Html
 runHint expr fileurl = do
