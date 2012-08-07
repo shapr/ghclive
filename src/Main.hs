@@ -8,7 +8,7 @@
 module Main where
 import           Control.Monad.Trans
 import qualified Data.ByteString                as BS
-import           Data.Maybe                     (fromMaybe)
+import           Data.Maybe                     (fromMaybe, isNothing)
 import           Data.Monoid
 import qualified Data.Text.Lazy                 as T
 import           Language.Haskell.Interpreter   hiding (get)
@@ -84,7 +84,10 @@ type Document = SM.SeqMap AtomId TextAtom
 data TextAtom = TextAtom
     { taCh      :: Char
     , taRemoved :: Maybe Timestamp
-    }
+    } deriving Show
+
+-- doc2string seqmap = map taCh . filter (isNothing . taRemoved) . SM.toList $ seqmap
+doc2string seqmap = map taCh $ filter (isNothing . taRemoved)  (map snd (SM.toList seqmap))
 
 emptyDoc = SM.singleton (AtomId (Timestamp 0) (ClientId 0)) (TextAtom ' ' (Just (Timestamp 0)))
 
@@ -131,6 +134,7 @@ mkYesod "GHCLive" [parseRoutes|
 /static StaticR Static getStatic
 /edit   EditR   GET
 /echo/#Text EchoR GET
+/loader LoaderR GET
 |]
 
 instance Yesod GHCLive
@@ -158,6 +162,18 @@ getEchoR theText = do
   [whamlet|
      <h1> #{theText}
   |]
+
+
+getLoaderR = do
+  y <- getYesod
+  cs <- liftIO $ readMVar (doc $ editor y)
+  liftIO . putStrLn $ "doc2string result is " ++ (doc2string $ fst cs )
+  t <- liftIO . performHint (hint y) $ moduleHint (doc2string $ fst cs)
+  case t of
+    Left error -> do
+             jsonToRepJson $ cleanShow error
+    Right displayres -> do
+             jsonToRepJson displayres
 
 getOutputR :: Handler RepHtml
 getOutputR = do
@@ -289,12 +305,11 @@ cacheUrl fileurl = do
       where fname = filenameFromUrl fileurl
 
 cacheFile f = do
-  writeFile (cachedir ++ fname ++ ".hs") f
-  return fname
-    where fname = filenameFromText f
+  writeFile (cachedir ++ "Main.hs") f
+  return "Main.hs"
 
 -- this ugly hack WILL fail with PRAGMAs at the top of the file! fix it later!
-filenameFromText f = head . take 1 . drop 1 . words . head . take 1 $ lines f
+-- filenameFromText f = head . take 1 . drop 1 . words . head . take 1 $ lines f
 
 listmatch a b = and $ zipWith (==) a b
 
