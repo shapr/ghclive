@@ -86,7 +86,6 @@ data TextAtom = TextAtom
     , taRemoved :: Maybe Timestamp
     } deriving Show
 
--- doc2string seqmap = map taCh . filter (isNothing . taRemoved) . SM.toList $ seqmap
 doc2string seqmap = map taCh $ filter (isNothing . taRemoved)  (map snd (SM.toList seqmap))
 
 emptyDoc = SM.singleton (AtomId (Timestamp 0) (ClientId 0)) (TextAtom ' ' (Just (Timestamp 0)))
@@ -133,7 +132,6 @@ mkYesod "GHCLive" [parseRoutes|
 /load   LoadR   POST
 /static StaticR Static getStatic
 /edit   EditR   GET
-/echo/#Text EchoR GET
 /loader LoaderR GET
 |]
 
@@ -155,14 +153,6 @@ main = do
                , settingsIntercept = WS.intercept (sockets editor) -- XXX expecting an Editor?
                }
   runSettings s =<< (toWaiApp master :: IO Yesod.Application)
-
-getEchoR         :: Text -> Handler RepHtml
-getEchoR theText = do
-  defaultLayout $ do
-  [whamlet|
-     <h1> #{theText}
-  |]
-
 
 getLoaderR = do
   y <- getYesod
@@ -199,10 +189,10 @@ getEvalR = do
   t <- liftIO . performHint (hint y) $ interpretHint (ST.unpack e)
   case t of
     Left error -> do
-             liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(H.toMarkup e,H.toMarkup $ cleanShow error)]) -- (happend e (H.toMarkup $ cleanShow error))
+             liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(H.toMarkup e,H.toMarkup $ cleanShow error)])
              jsonToRepJson . display $ cleanShow error
     Right displayres -> do
-             liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(H.toMarkup e,displayres)]) -- (happend e displayres)
+             liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(H.toMarkup e,displayres)])
              jsonToRepJson $ display displayres
 
 postLoadR :: Handler RepJson
@@ -230,18 +220,6 @@ moduleHint ms = do
   setTopLevelModules ms
   setImports $ ["Prelude", "Network.Web.GHCLive.Display", "Text.Blaze"] ++ ms
   return ms
-
-runHint :: MonadInterpreter m => String -> String -> m H.Html
-runHint expr fileurl = do
-  files <- liftIO $ do
-    putStrLn $ "fileurl is " ++ show (lines fileurl)
-    mapM cacheUrl (urls fileurl)
-  let allfiles = "Helper.hs" : files
-  loadModules $ map (cachedir ++) allfiles
-  setTopLevelModules $ map (takeWhile (/= '.')) allfiles
-  let imports = map (flip (,) Nothing) $ mods fileurl
-  setImportsQ $ [("Prelude",Nothing),("Network.Web.GHCLive.Display",Nothing),("Text.Blaze",Nothing)] ++ imports
-  interpret expr as
 
     -- eval :: String -> Interpret String
     -- eval "something" ~= interpret "(show something) (as :: String)"
@@ -295,27 +273,9 @@ cleanShow ie = case ie of
 defaultOutput :: [(H.Html,H.Html)]
 defaultOutput = mempty
 
-filenameFromUrl = reverse . takeWhile (/= '/') . reverse
-
-cacheUrl fileurl = do
-  putStrLn ("cacheFile got " ++ fileurl)
-  Right doc <- openURI fileurl
-  BS.writeFile (cachedir ++ fname) doc -- is wrong if filename /= module name!
-  return fname
-      where fname = filenameFromUrl fileurl
-
 cacheFile f = do
   writeFile (cachedir ++ "Main.hs") f
   return "Main.hs"
-
--- this ugly hack WILL fail with PRAGMAs at the top of the file! fix it later!
--- filenameFromText f = head . take 1 . drop 1 . words . head . take 1 $ lines f
-
-listmatch a b = and $ zipWith (==) a b
-
-urls fbox = filter (listmatch "http://") $ lines fbox
-
-mods fbox = filter (isUpper . head) $ lines fbox -- blows up with empty lines?
 
 getRootR :: Handler RepHtml
 getRootR = do
@@ -648,4 +608,3 @@ sendInit e c = do
 
 actions :: [J.Value] -> J.Value
 actions as = J.object ["actions" .= as ]
-
