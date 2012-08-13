@@ -130,6 +130,7 @@ mkYesod "GHCLive" [parseRoutes|
 /static StaticR Static getStatic
 /loader LoaderR GET
 /edit   EditR   GET
+/results ResultsR GET
 |]
 
 instance Yesod GHCLive
@@ -184,6 +185,61 @@ getOutputR = do
         <p>
           <div class=hint-res>#{snd chunk}
     |]
+
+
+-- getResultsR :: Handler RepHtml
+-- getResultsR = do
+--   y <- getYesod
+--   h <- liftIO $ readMVar (ref y)
+--   w <- widgetToPageContent [whamlet|
+--         $forall chunk <- h
+--           <div class=hint-prompt>hint>
+--           <div class=hint-expr>#{fst chunk}
+--           <p>
+--             <div class=hint-res>#{snd chunk}
+--         |]
+--   p <- widgetToPageContent w
+--   r <- getUrlRenderParams
+--   toContent ((pageBody p) r)
+
+
+
+getResultsR = do
+  y <- getYesod
+  h <- liftIO $ readMVar (ref y)
+  -- w <- outw h
+  pc <- widgetToPageContent (outw h)
+  hamletToRepHtml [hamlet|^{pageBody pc} |]
+
+outw h = [whamlet|
+      <p>ghclive output
+      $forall chunk <- h
+        <div class=hint-prompt>hint>
+        <div class=hint-expr>#{fst chunk}
+        <p>
+          <div class=hint-res>#{snd chunk}
+    |]
+
+-- plainLayout   :: GWidget sub a () -> GHandler sub a RepHtml
+-- plainLayout w = do
+--   p <- widgetToPageContent w
+--   hamletToRepHtml [hamlet|
+-- #{p} |]
+
+-- myLayout :: GWidget sub a () -> GHandler sub a RepHtml
+-- myLayout w = do
+--         p <- widgetToPageContent w
+--         mmsg <- getMessage
+--         hamletToRepHtml [hamlet| $newline never $doctype 5
+-- <html>
+--     <head>
+--         <title>#{pageTitle p}
+--         ^{pageHead p}
+--     <body>
+--         $maybe msg <- mmsg
+--             <p .message>#{msg}
+--         ^{pageBody p}
+-- |]
 
 getEvalR :: Handler RepJson
 getEvalR = do
@@ -394,10 +450,10 @@ $(function () {
     $("#outputit").click(function() {
         $.ajax({
             type: "GET",
-            url: "/output",
+            url: "/results",
             success: function(result) {
                 // throw /output into its text area
-                   $("#output").val(result);
+                   $("#output").html(result);
             }
         }); // end ajax call
         return false;
@@ -416,7 +472,7 @@ $(function () {
                  <input type=submit value=evalit #evalit>
                  <input type=submit value=outputit #outputit>
                <br>
-               <textarea #output >
+               <div #output >output here
              |]
 
 insertAtom :: AtomId -> AtomId -> Char -> Document -> Document
