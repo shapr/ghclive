@@ -39,6 +39,7 @@ import qualified Data.HashMap.Strict            as HM
 import           Data.Map                       (Map)
 import qualified Data.Map                       as M
 import           Data.Text                      (Text)
+import qualified Data.Text.IO                   as DTI
 import           Data.Time.Clock                (UTCTime, getCurrentTime)
 import           Data.Time.Clock.POSIX          (utcTimeToPOSIXSeconds)
 import qualified Data.Vector                    as V
@@ -127,8 +128,8 @@ mkYesod "GHCLive" [parseRoutes|
 /eval   EvalR   GET
 /load   LoadR   POST
 /static StaticR Static getStatic
-/edit   EditR   GET
 /loader LoaderR GET
+/edit   EditR   GET
 |]
 
 instance Yesod GHCLive
@@ -159,13 +160,21 @@ getLoaderR = do
     Left error -> jsonToRepJson $ cleanShow error
     Right displayres -> jsonToRepJson displayres
 
+getRootR :: Handler RepHtml
+getRootR = defaultLayout [whamlet|
+                            <h1>websockets demo
+                            <ul>
+                              <li>
+                                <a href=@{EditR}>editor
+                         |]
+
 getOutputR :: Handler RepHtml
 getOutputR = do
   y <- getYesod
   h <- liftIO $ readMVar (ref y)
   defaultLayout $ do
-    addScript (StaticR jquery_js)
-    addScriptRemote "http://localhost:9090/bdo"
+    -- addScript (StaticR jquery_js)
+    -- addScriptRemote "http://localhost:9090/bdo"
     setTitle "ghclive output"
     [whamlet|
       <p>ghclive output
@@ -180,6 +189,8 @@ getEvalR :: Handler RepJson
 getEvalR = do
   y <- getYesod
   e <- fromMaybe "" <$> lookupGetParam "expr"
+  liftIO $ putStr "expression is "
+  liftIO $ DTI.putStrLn e
   t <- liftIO . performHint (hint y) $ interpretHint (ST.unpack e)
   case t of
     Left error -> do
@@ -267,85 +278,6 @@ cacheFile f = do
   writeFile (cachedir ++ "Main.hs") f
   return "Main.hs"
 
-getRootR :: Handler RepHtml
-getRootR = defaultLayout $ do
-    addScript (StaticR jquery_js)
-    addScript (StaticR jquery_console_js)
-    addScript (StaticR hintconsole_js)
-    addStylesheetRemote "http://c-71-207-252-122.hsd1.al.comcast.net:8000/lib/cm/lib/codemirror.css"
-    addStylesheet $ StaticR style_css
-    addScriptRemote "http://localhost:9090/bdo"
-    addScriptRemote "http://c-71-207-252-122.hsd1.al.comcast.net:8000/lib/cm/lib/codemirror.js"
-    addScriptRemote "http://c-71-207-252-122.hsd1.al.comcast.net:8000/lib/cm/mode/haskell/haskell.js"
-    addScriptRemote "http://c-71-207-252-122.hsd1.al.comcast.net:8000/channel/bcsocket.js"
-    addScriptRemote "http://c-71-207-252-122.hsd1.al.comcast.net:8000/share/share.uncompressed.js"
-    addScriptRemote "http://c-71-207-252-122.hsd1.al.comcast.net:8000/share/cm.js"
-    toWidget [julius|
-    var doc = null, editor = null;
-
-function setDoc(docName) {
-  document.title = docName;
-  sharejs.open(docName, 'text', 'http://c-71-207-252-122.hsd1.al.comcast.net:8000/channel', function(error, newDoc) {
-      if (doc !== null) {
-          doc.close();
-          doc.detach_ace();
-      }
-      doc = newDoc;
-      if (error) {
-          console.error(error);
-          return;
-      }
-      doc.attach_cm(editor);
-  });
-};
-window.onload = function() {
-  var ed = document.getElementById('editor');
-  editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
-    mode: "haskell",
-    tabSize: 2,
-    lineNumbers:true,
-    indentUnit: 4,
-    matchBrackets: true
-  });
-  setDoc('cm');  // Hooking ShareJS and CodeMirror for the first time.
-  var namefield = document.getElementById('namefield');
-  function fn() {
-      var docName = namefield.value;
-      if (docName) setDoc(docName);
-  }
-  if (namefield.addEventListener) {
-      namefield.addEventListener('input', fn, false);
-  } else {
-      namefield.attachEvent('oninput', fn);
-  }
-};
-      $("#testclick").click(function() {
-      alert("Handler for #load.click() called");
-      });
-
-      $("#load").click(function() {
-         $("#editor").val(editor.getValue());
-         var serData = $("#source").serialize();
-         // alert(serData);
-         $.post('/load', serData, function (data) {
-           alert(data);
-         });
-         return false;
-      });
-      |]
-    setTitle "ghclive output"
-    [whamlet|
-      <form action=/hint method=get>
-        <input type=text id=fileurl name=fileurl> File to load
-      <div id=header>
-        <div id="htext">
-          <b>Editing
-            <input type=text value=cm id=namefield>
-      <form id=source>
-        <textarea id=editor class=editor name=editor>
-        <input id=load type=button value=Load Module>
-      <p>ghclive output
-    |]
 
 {-- shared editor --}
 getEditR :: Handler RepHtml
@@ -436,16 +368,56 @@ getEditR = defaultLayout $ do
                             }
                           });
                         }
+
+
+$(function () {
+
+    $("#load").click(function() {
+        $.get('/loader');
+        return false;
+    });
+
+    $("#evalit").click(function() {
+        var dataString = 'expr=' + $("#expr").val();
+        $.ajax({
+            type: "GET",
+            url: "/eval",
+            data: dataString,
+            success: function() {
+                // throw /output into its text area
+
+            }
+        }); // end ajax call
+        return false;
+    });
+
+    $("#outputit").click(function() {
+        $.ajax({
+            type: "GET",
+            url: "/output",
+            success: function(result) {
+                // throw /output into its text area
+                   $("#output").val(result);
+            }
+        }); // end ajax call
+        return false;
+    });
+
+});
+
                       |]
              [whamlet|
                <h1>editor
-               <textarea #editor></textarea>
+               <textarea #editor>
+               <form action=>
+                 <input type=submit value=load #load >
+                 <br>
+                 <input #expr >
+                 <input type=submit value=evalit #evalit>
+                 <input type=submit value=outputit #outputit>
+               <br>
+               <textarea #output >
              |]
-
-
-
-
-
 
 insertAtom :: AtomId -> AtomId -> Char -> Document -> Document
 insertAtom after aid ch d = go xs
@@ -458,7 +430,7 @@ insertAtom after aid ch d = go xs
 removeAtom :: AtomId -> Timestamp -> Document -> Document
 removeAtom a time = SM.adjust (\(TextAtom ch _) -> TextAtom ch (Just time)) a
 
--- timestamp in milliseconds
+-- |'getTimestamp' returns the timestamp in milliseconds
 getTimestamp :: MonadIO m => m Timestamp
 getTimestamp = liftIO $ liftM (Timestamp . round . (*1000) . utcTimeToPOSIXSeconds) getCurrentTime
 
