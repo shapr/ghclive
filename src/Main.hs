@@ -441,7 +441,7 @@ $(function () {
             data: dataString,
             success: function() {
                 // throw /output into its text area
-
+                   $("#outputit").click()
             }
         }); // end ajax call
         return false;
