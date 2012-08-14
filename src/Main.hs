@@ -394,11 +394,10 @@ $(function () {
     });
 
     $("#evalit").click(function() {
-        var dataString = 'expr=' + $("#expr").val();
         $.ajax({
             type: "GET",
             url: "/eval",
-            data: dataString,
+            data: {expr: $("#expr").val() },
             success: function() {
                 // throw /output into its text area
                    $("#outputit").click()
