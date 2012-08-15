@@ -1,11 +1,22 @@
-{-# LANGUAGE DeriveDataTypeable   #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE QuasiQuotes                #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
 module Network.Web.GHCLive.Display where
 
-import           Data.Aeson                    (ToJSON, (.=))
+import           Data.Aeson                    (FromJSON, ToJSON, Value, (.:), (.=))
+import qualified Data.Aeson                    as J
 import qualified Data.Aeson                    as A
+import           Data.Aeson.TH
+import qualified Data.Aeson.Types              as J
 import           Data.Text.Lazy
 import           Data.Typeable
 import           Diagrams.Backend.SVG
@@ -20,12 +31,28 @@ data DisplayResult = DisplayResult {
       -- Luite has type for Haskell type?
       } deriving (Eq, Show, Typeable)
 
-instance ToJSON DisplayResult where
-  toJSON dr = A.object ["result" .= result dr,
-                        "clientType" .= clientType dr,
-                        "resources" .= resources dr
-                       ]
+$(deriveJSON id ''DisplayResult)
 
+-- instance ToJSON DisplayResult where
+--   toJSON dr = A.object ["result" .= result dr,
+--                         "clientType" .= clientType dr,
+--                         "resources" .= resources dr
+--                        ]
+
+
+
+-- instance FromJSON DisplayResult -- requires GHC.Generics
+-- instance ToJSON DisplayResult -- requires GHC.Generics
+{- since this first hack didn't work, we take another option from
+http://hackage.haskell.org/packages/archive/aeson/0.6.0.2/doc/html/Data-Aeson.html#t:FromJSON
+instance FromJSON DisplayResult where
+    parseJSON (A.Object dr) = DisplayResult {
+                                  result = dr .: "result"
+                                , clientType = dr .: "clientType"
+                                , resources = dr .: "resources"
+                                }
+    parseJSON _             = mzero
+-}
 class Display a where
     display :: a -> DisplayResult
 

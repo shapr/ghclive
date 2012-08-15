@@ -60,8 +60,11 @@ cachedir = "cache/"
 type Hint = Run (InterpreterT IO)
 data Run m = Run { vRequest :: MVar (m ()) }
 
+
+
 data GHCLive = GHCLive
-                { ref       :: MVar [(H.Html,H.Html)]
+                { -- ref       :: MVar [(H.Html,H.Html)]
+                  ref       :: MVar [(J.Value,J.Value)] -- (J.Value,Either Text J.Value)
                 , hint      :: Hint
                 , editor    :: Editor
                 , getStatic :: Static
@@ -173,6 +176,11 @@ getRootR = defaultLayout [whamlet|
                                 <a href=@{EditR}>editor
                          |]
 
+valToResult   :: Value -> Text
+valToResult v = case J.fromJSON v of
+                  J.Error err -> ST.pack ("fromJSON Failed with " ++ err)
+                  J.Success a -> a
+
 getOutputR :: Handler RepHtml
 getOutputR = do
   y <- getYesod
@@ -183,24 +191,26 @@ getOutputR = do
       <p>ghclive output
       $forall chunk <- h
         <div class=hint-prompt>hint>
-        <div class=hint-expr>#{fst chunk}
+        <div class=hint-expr>#{ valToResult $ fst chunk}
         <p>
-          <div class=hint-res>#{snd chunk}
+          <div class=hint-res>#{ valToResult $ snd chunk}
     |]
 
 getResultsR = do
   y <- getYesod
   h <- liftIO $ readMVar (ref y)
+  -- let htmlargh = (J.fromJSON h :: J.Result DisplayResult)
   pc <- widgetToPageContent (outw h)
   hamletToRepHtml [hamlet|^{pageBody pc} |]
+
 
 outw h = [whamlet|
       <p>ghclive output
       $forall chunk <- h
         <div class=hint-prompt>hint>
-        <div class=hint-expr>#{fst chunk}
+        <div class=hint-expr>#{ valToResult $ fst chunk}
         <p>
-          <div class=hint-res>#{snd chunk}
+          <div class=hint-res>#{ valToResult $ snd chunk}
     |]
 
 getEvalR :: Handler RepJson
@@ -212,10 +222,12 @@ getEvalR = do
   (t :: Either InterpreterError DisplayResult) <- liftIO . performHint (hint y) $ interpretHint ("display " ++ parens (ST.unpack e))
   case t of
     Left error -> do
-             liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(H.toMarkup e,H.toMarkup $ cleanShow error)])
+             -- liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(H.toMarkup e,H.toMarkup $ cleanShow error)])
+             liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(J.toJSON e,J.toJSON $ cleanShow error)])
              jsonToRepJson . display $ cleanShow error
     Right displayres -> do
              -- liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(H.toMarkup e,displayres)])
+             liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(J.toJSON e,J.toJSON displayres)])
              jsonToRepJson displayres
 
 postLoadR :: Handler RepJson
@@ -289,7 +301,8 @@ cleanShow ie = case ie of
 
 
 {--- output page goodies ---}
-defaultOutput :: [(H.Html,H.Html)]
+--defaultOutput :: [(H.Html,H.Html)]
+defaultOutput :: [(Value,Value)]
 defaultOutput = mempty
 
 cacheFile f = do
