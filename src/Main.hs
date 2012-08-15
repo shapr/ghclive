@@ -1,10 +1,13 @@
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverlappingInstances       #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE QuasiQuotes                #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
 module Main where
 import           Control.Monad.Trans
 import qualified Data.ByteString                as BS
@@ -31,6 +34,7 @@ import           Diagrams.Backend.SVG
 import           Diagrams.Prelude
 import           Network.Web.GHCLive.Display
 import           Text.Blaze
+import           Text.Blaze.Internal            (preEscapedText, text)
 import           Text.Blaze.Renderer.Text       (renderMarkup)
 
 import qualified Data.Aeson                     as J
@@ -123,14 +127,14 @@ staticSite = static "static"
 $(staticFiles "static")
 
 mkYesod "GHCLive" [parseRoutes|
-/       RootR   GET
-/output OutputR GET
-/eval   EvalR   GET
-/load   LoadR   POST
-/static StaticR Static getStatic
-/loader LoaderR GET
-/edit   EditR   GET
+/        RootR   GET
+/eval    EvalR   GET
+/load    LoadR   POST
+/static  StaticR Static getStatic
+/loader  LoaderR GET
+/edit    EditR   GET
 /results ResultsR GET
+/output  OutputR GET -- to be removed
 |]
 
 instance Yesod GHCLive
@@ -141,7 +145,7 @@ main = do
   r  <- newMVar defaultOutput
   h  <- newHint
   st <- staticSite
-  -- LOTR shared editor setup
+  -- shared editor setup
   d  <- newMVar (emptyDoc, M.empty)
   u  <- newMVar (ClientId 0)
   let editor = Editor d u
@@ -174,8 +178,6 @@ getOutputR = do
   y <- getYesod
   h <- liftIO $ readMVar (ref y)
   defaultLayout $ do
-    -- addScript (StaticR jquery_js)
-    -- addScriptRemote "http://localhost:9090/bdo"
     setTitle "ghclive output"
     [whamlet|
       <p>ghclive output
@@ -207,14 +209,14 @@ getEvalR = do
   e <- fromMaybe "" <$> lookupGetParam "expr"
   liftIO $ putStr "expression is "
   liftIO $ DTI.putStrLn e
-  t <- liftIO . performHint (hint y) $ interpretHint (ST.unpack e)
+  (t :: Either InterpreterError DisplayResult) <- liftIO . performHint (hint y) $ interpretHint ("display " ++ parens (ST.unpack e))
   case t of
     Left error -> do
              liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(H.toMarkup e,H.toMarkup $ cleanShow error)])
              jsonToRepJson . display $ cleanShow error
     Right displayres -> do
-             liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(H.toMarkup e,displayres)])
-             jsonToRepJson $ display displayres
+             -- liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(H.toMarkup e,displayres)])
+             jsonToRepJson displayres
 
 postLoadR :: Handler RepJson
 postLoadR = do
@@ -298,7 +300,7 @@ cacheFile f = do
 {-- shared editor --}
 getEditR :: Handler RepHtml
 getEditR = defaultLayout $ do
-             -- addScriptRemote "https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"
+             addScriptRemote "https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"
              addScript     (StaticR jquery_js)
              addScript     (StaticR codemirror_lib_codemirror_js)
              addScript     (StaticR codemirror_mode_haskell_haskell_js)
