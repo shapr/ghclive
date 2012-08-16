@@ -60,11 +60,12 @@ cachedir = "cache/"
 type Hint = Run (InterpreterT IO)
 data Run m = Run { vRequest :: MVar (m ()) }
 
-
+-- hint gives Either InterpreterError DisplayResult
+jsonerror expr err = object ["expr" .= expr, "error" .= err]
+jsonresult expr res = object ["expr" .= expr, "result" .= res]
 
 data GHCLive = GHCLive
-                { -- ref       :: MVar [(H.Html,H.Html)]
-                  ref       :: MVar [(J.Value,J.Value)] -- (J.Value,Either Text J.Value)
+                { ref       :: MVar [J.Value] -- list of jsonerror or jsonresult Values
                 , hint      :: Hint
                 , editor    :: Editor
                 , getStatic :: Static
@@ -132,12 +133,10 @@ $(staticFiles "static")
 mkYesod "GHCLive" [parseRoutes|
 /        RootR   GET
 /eval    EvalR   GET
-/load    LoadR   POST
 /static  StaticR Static getStatic
 /loader  LoaderR GET
 /edit    EditR   GET
 /results ResultsR GET
-/output  OutputR GET -- to be removed
 |]
 
 instance Yesod GHCLive
@@ -145,7 +144,7 @@ instance Yesod GHCLive
 main :: IO ()
 main = do
   -- hint setup
-  r  <- newMVar defaultOutput
+  r  <- newMVar ([] :: [J.Value])
   h  <- newHint
   st <- staticSite
   -- shared editor setup
@@ -176,68 +175,27 @@ getRootR = defaultLayout [whamlet|
                                 <a href=@{EditR}>editor
                          |]
 
-valToResult   :: Value -> Text
-valToResult v = case J.fromJSON v of
-                  J.Error err -> ST.pack ("fromJSON Failed with " ++ err)
-                  J.Success a -> a
-
-getOutputR :: Handler RepHtml
-getOutputR = do
-  y <- getYesod
-  h <- liftIO $ readMVar (ref y)
-  defaultLayout $ do
-    setTitle "ghclive output"
-    [whamlet|
-      <p>ghclive output
-      $forall chunk <- h
-        <div class=hint-prompt>hint>
-        <div class=hint-expr>#{ valToResult $ fst chunk}
-        <p>
-          <div class=hint-res>#{ valToResult $ snd chunk}
-    |]
-
 getResultsR = do
   y <- getYesod
   h <- liftIO $ readMVar (ref y)
-  -- let htmlargh = (J.fromJSON h :: J.Result DisplayResult)
-  pc <- widgetToPageContent (outw h)
-  hamletToRepHtml [hamlet|^{pageBody pc} |]
-
-
-outw h = [whamlet|
-      <p>ghclive output
-      $forall chunk <- h
-        <div class=hint-prompt>hint>
-        <div class=hint-expr>#{ valToResult $ fst chunk}
-        <p>
-          <div class=hint-res>#{ valToResult $ snd chunk}
-    |]
+  jsonToRepJson h -- send ALL the state!
 
 getEvalR :: Handler RepJson
 getEvalR = do
   y <- getYesod
-  e <- fromMaybe "" <$> lookupGetParam "expr"
+  expr <- fromMaybe "" <$> lookupGetParam "expr"
   liftIO $ putStr "expression is "
-  liftIO $ DTI.putStrLn e
-  (t :: Either InterpreterError DisplayResult) <- liftIO . performHint (hint y) $ interpretHint ("display " ++ parens (ST.unpack e))
+  liftIO $ DTI.putStrLn expr
+  (t :: Either InterpreterError DisplayResult) <- liftIO . performHint (hint y) $ interpretHint ("display " ++ parens (ST.unpack expr))
   case t of
     Left error -> do
-             -- liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(H.toMarkup e,H.toMarkup $ cleanShow error)])
-             liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(J.toJSON e,J.toJSON $ cleanShow error)])
-             jsonToRepJson . display $ cleanShow error
+             let jserr = jsonerror expr (cleanShow error)
+             liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [jserr])
+             jsonToRepJson jserr
     Right displayres -> do
-             -- liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(H.toMarkup e,displayres)])
-             liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [(J.toJSON e,J.toJSON displayres)])
-             jsonToRepJson displayres
-
-postLoadR :: Handler RepJson
-postLoadR = do
-  y <- getYesod
-  f <- ST.unpack . fromMaybe "" <$> lookupPostParam "editor"
-  t <- liftIO . performHint (hint y) $ moduleHint f
-  case t of
-    Left error -> jsonToRepJson $ cleanShow error
-    Right displayres -> jsonToRepJson displayres
+             let jsres = jsonresult expr displayres
+             liftIO $ modifyMVar_ (ref y) $ \x -> return (x ++ [jsres])
+             jsonToRepJson jsres
 
 interpretHint :: (Typeable a, MonadInterpreter m) => String -> m a
 interpretHint expr = interpret expr as
@@ -298,12 +256,6 @@ cleanShow ie = case ie of
                  WontCompile es -> unlines $ map errMsg es
                  NotAllowed e -> "NotAllowed\n" ++ e
                  GhcException e -> "GhcException\n" ++ e
-
-
-{--- output page goodies ---}
---defaultOutput :: [(H.Html,H.Html)]
-defaultOutput :: [(Value,Value)]
-defaultOutput = mempty
 
 cacheFile f = do
   writeFile (cachedir ++ "Main.hs") f
@@ -400,6 +352,13 @@ getEditR = defaultLayout $ do
                           });
                         }
 
+function formatResult (res) {
+    var formatted = "";
+    if(res.error) formatted = '<div><p>hint></p><p>' + res.expr + '</div><br/><div>' + res.error + '</div>';
+    else formatted = '<div>hint></div><div>' + res.expr + '</div><br/><div>' + res.result.result + '</div>';
+    return formatted;
+}
+
 
 $(function () {
 
@@ -413,9 +372,10 @@ $(function () {
             type: "GET",
             url: "/eval",
             data: {expr: $("#expr").val() },
-            success: function() {
+            success: function(res) {
                 // throw /output into its text area
-                   $("#outputit").click()
+                   $("#output").append(formatResult(res));
+                   // $("#outputit").click()
             }
         }); // end ajax call
         return false;
@@ -426,8 +386,8 @@ $(function () {
             type: "GET",
             url: "/results",
             success: function(result) {
-                // throw /output into its text area
-                   $("#output").html(result);
+                // map formatResult over the results
+                   // $("#output").html(result);
             }
         }); // end ajax call
         return false;
