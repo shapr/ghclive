@@ -272,6 +272,7 @@ getEditR = defaultLayout $ do
              addScript     (StaticR es6_shim_js)
              addScript     (StaticR document_js)
              addStylesheet (StaticR codemirror_lib_codemirror_css)
+             addStylesheet (StaticR foo_css)
              toWidget [lucius|
                          #editor {
                            width: 800px;
@@ -360,7 +361,6 @@ function formatResult (res) {
     return r;
 }
 
-
 $(function () {
 
     $("#load").click(function() {
@@ -374,9 +374,7 @@ $(function () {
             url: "/eval",
             data: {expr: $("#expr").val() },
             success: function(res) {
-                // throw /output into its text area
-                   $("#output").append(formatResult(res));
-                   // $("#outputit").click()
+                $("#output").append(formatResult(res));
             }
         }); // end ajax call
         return false;
@@ -386,16 +384,18 @@ $(function () {
         $.ajax({
             type: "GET",
             url: "/results",
-            success: function(result) {
+            success: function(results) {
+                // clear the output area
+                $("#output").empty();
                 // map formatResult over the results
-                   // $("#output").html(result);
+                for (var i = 0; i < results.length; i++) {
+                    $("#output").append(formatResult(results[i]));
+                }
             }
         }); // end ajax call
         return false;
     });
-
 });
-
                       |]
              [whamlet|
                <h1>editor
@@ -405,6 +405,7 @@ $(function () {
                  <br>
                  <input #expr >
                  <input type=submit value=evalit #evalit>
+                 <br>
                  <input type=submit value=outputit #outputit>
                <br>
                <div #output >output here

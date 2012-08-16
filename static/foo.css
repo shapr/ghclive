@@ -1,0 +1,23 @@
+/* style.css won't load, so we use foo.css */
+body {
+    font-family: : Georgia;
+}
+textarea, input {
+    font-family: monospace;
+    font-size: 13px;
+    width: 75%;
+}
+
+#code {
+    float: left;
+    height: 200px;
+}
+
+#output {
+    font-family: monospace;
+    font-size: 13px;
+    width: 75%;
+    height:300px;
+    background-color:Gray;
+    overflow-y: auto;
+}
