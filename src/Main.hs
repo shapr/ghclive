@@ -353,10 +353,11 @@ getEditR = defaultLayout $ do
                         }
 
 function formatResult (res) {
-    var formatted = "";
-    if(res.error) formatted = '<div><p>hint></p><p>' + res.expr + '</div><br/><div>' + res.error + '</div>';
-    else formatted = '<div>hint></div><div>' + res.expr + '</div><br/><div>' + res.result.result + '</div>';
-    return formatted;
+    var r = $('<div><div class="prompt">hint&gt;</div><div class="expr">empty expr</div><div class="result"></div></div>');
+    r.find('.expr').text(res.expr);
+    if(res.error) r.find('.result').text(res.error);
+    else r.find('.result').append(res.result.result);
+    return r;
 }
 
 
