@@ -3,6 +3,11 @@ ghclive
 
 Google Summer of Code 2012 project, GHCi for the web
 
+Quick start
+-----------
+`$ cabal build && ./dist/build/ghclive/ghclive` and point your browser
+to [http://localhost:3000](http://localhost:3000). Click on 'edit'.
+
 Prototypes
 ----------
 The prototypes subdirectory contains several quick hacks demonstrating various concepts.
