@@ -369,6 +369,12 @@ function scrollToBottom(elem) { // pass in the id of the element you want scroll
 
 $(function () {
 
+    // Make the server initialize an empty module in case the user does 
+    // 'eval it' without entering anything into the editor. Actually we
+    // shouldn't need to tell the server to do this, I suppose, so this
+    // is a bit of a hack.
+    $.get('/loader');
+
     $("#load").click(function() {
         $.get('/loader');
         return false;
