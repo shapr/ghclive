@@ -337,7 +337,7 @@ getEditR = defaultLayout $ do
                                 if(a.action === "doc") {
                                   doc.setDocument(a.doc);
                                   refresh = true;
-                                } else if(a.action == "clientid") {
+                                } else if(a.action === "clientid") {
                                   setClientId(a.clientId);
                                 } else if(a.action === "insert") {
                                   r = doc.applyOp(a);
