@@ -127,7 +127,8 @@ instance J.FromJSON AtomId where
    parseJSON (J.Array v) | V.length v == 2 = AtomId <$> J.parseJSON (v V.! 0) <*> J.parseJSON (v V.! 1)
    parseJSON _ = mzero
 
-staticSite = static "static"
+-- staticSite = static "static"
+staticSite = staticDevel "static"
 $(staticFiles "static")
 
 mkYesod "GHCLive" [parseRoutes|
