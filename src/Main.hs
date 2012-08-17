@@ -219,7 +219,7 @@ moduleHint ms = do
     Interpreter abstraction
 ------------------------------------------------------------------------------}
 newHint :: IO Hint
-newHint = newRun $ \a -> (void $ runInterpreter (liftIO restoreHandlers >> a))
+newHint = newRun $ \a -> void $ runInterpreter (liftIO restoreHandlers >> a)
 
 performHint :: Hint -> InterpreterT IO a -> IO (Either InterpreterError a)
 performHint hint act = perform hint $ (Right `liftM` act) `catchError` (return . Left)
@@ -362,6 +362,11 @@ function formatResult (res) {
     return r;
 }
 
+function scrollToBottom(elem) { // pass in the id of the element you want scrolled to bottom
+  var elem = document.getElementById(elem);
+  elem.scrollTop = elem.scrollHeight;
+}
+
 $(function () {
 
     $("#load").click(function() {
@@ -376,6 +381,7 @@ $(function () {
             data: {expr: $("#expr").val() },
             success: function(res) {
                 $("#output").append(formatResult(res));
+                scrollToBottom('output');
             }
         }); // end ajax call
         return false;
@@ -392,6 +398,7 @@ $(function () {
                 for (var i = 0; i < results.length; i++) {
                     $("#output").append(formatResult(results[i]));
                 }
+                scrollToBottom('output');
             }
         }); // end ajax call
         return false;
