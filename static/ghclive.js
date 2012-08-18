@@ -67,7 +67,8 @@ sock.onmessage = function(evt) {
         }
         if(msg.refreshoutput) {
             // refreshOutput();
-            alert('need to refresh output');
+            // alert('need to refresh output');
+            outputit();
         }
         if(refresh) {
             refreshEditor();
@@ -102,6 +103,22 @@ function scrollToBottom(elem) { // pass in the id of the element you want scroll
     elem.scrollTop = elem.scrollHeight;
 }
 
+function outputit(){
+    $.ajax({
+        type: "GET",
+        url: "/results",
+        success: function(results) {
+            // clear the output area
+            $("#output").empty();
+            // map formatResult over the results
+            for (var i = 0; i < results.length; i++) {
+                $("#output").append(formatResult(results[i]));
+            }
+            scrollToBottom('output');
+        }
+    }); // end ajax call
+    return false;
+}
 
 $(function () {
 
@@ -133,22 +150,8 @@ $(function () {
         return false;
     }
 
+
     $("#evalit").click(evalit);
 
-    $("#outputit").click(function(){
-        $.ajax({
-            type: "GET",
-            url: "/results",
-            success: function(results) {
-                // clear the output area
-                $("#output").empty();
-                // map formatResult over the results
-                for (var i = 0; i < results.length; i++) {
-                    $("#output").append(formatResult(results[i]));
-                }
-                scrollToBottom('output');
-            }
-        }); // end ajax call
-        return false;
-    });
+    $("#outputit").click(outputit);
 });
