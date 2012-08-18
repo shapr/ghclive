@@ -355,12 +355,26 @@ getEditR = defaultLayout $ do
                           });
                         }
 
+function makeResultSlot(expr) {
+    var slot = $('<div><span class="prompt">hint&gt;</span> <span class="expr">empty expr</span><div class="result">...</div></div>');
+    slot.find('.expr').text(expr);
+    return slot;
+}
+
+function fillInResultSlot(slot, res) {
+    var node = slot.find('.result');
+    if (res.error) {
+        node.text(res.error);
+    } else {
+        node.text('');
+        node.append(res.result.result);
+    }
+}
+
 function formatResult (res) {
-    var r = $('<div><span class="prompt">hint&gt;</span> <span class="expr">empty expr</span><div class="result"></div></div>');
-    r.find('.expr').text(res.expr);
-    if(res.error) r.find('.result').text(res.error);
-    else r.find('.result').append(res.result.result);
-    return r;
+    var slot = makeResultSlot(res.expr);
+    fillInResultSlot(slot, res);
+    return slot;
 }
 
 function scrollToBottom(elem) { // pass in the id of the element you want scrolled to bottom
@@ -382,12 +396,15 @@ $(function () {
     });
 
     function evalit() {
+        var expr = $("#expr").val();
+        var slot = makeResultSlot(expr);
+        $("#output").append(slot);
         $.ajax({
             type: "GET",
             url: "/eval",
-            data: {expr: $("#expr").val() },
+            data: {expr: expr},
             success: function(res) {
-                $("#output").append(formatResult(res));
+                fillInResultSlot(slot, res);
                 scrollToBottom('output');
             }
         }); // end ajax call
