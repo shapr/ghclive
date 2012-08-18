@@ -65,6 +65,10 @@ sock.onmessage = function(evt) {
                 }
             }
         }
+        if(msg.refreshoutput) {
+            // refreshOutput();
+            alert('need to refresh output');
+        }
         if(refresh) {
             refreshEditor();
         }
@@ -98,6 +102,7 @@ function scrollToBottom(elem) { // pass in the id of the element you want scroll
     elem.scrollTop = elem.scrollHeight;
 }
 
+
 $(function () {
 
     // Make the server initialize an empty module in case the user does
@@ -130,7 +135,7 @@ $(function () {
 
     $("#evalit").click(evalit);
 
-    $("#outputit").click(function() {
+    $("#outputit").click(function(){
         $.ajax({
             type: "GET",
             url: "/results",

@@ -160,7 +160,7 @@ main = do
   let master = GHCLive r h editor ss -- staticSiteFiles
       s      = defaultSettings
                { settingsPort = 3000
-               , settingsIntercept = WS.intercept (sockets editor) -- XXX expecting an Editor?
+               , settingsIntercept = WS.intercept (sockets editor)
                }
   runSettings s =<< (toWaiApp master :: IO Yesod.Application)
 
@@ -192,6 +192,11 @@ getEvalR = do
   expr <- fromMaybe "" <$> lookupGetParam "expr"
   liftIO $ putStr "expression is "
   liftIO $ DTI.putStrLn expr
+  -- get Editor with getYesod and then document
+  -- get the clients from the editor document (see applyOps for an example)
+  (_, clients) <- liftIO $ readMVar (doc $ editor y)
+  -- - call pushToClients with the clients and the JSON message you want to send, for example: object [ "refresh" .= True ]
+  pushToClients clients $ object [ "refreshoutput" .= True ]
   (t :: Either InterpreterError DisplayResult) <- liftIO . performHint (hint y) $ interpretHint ("display " ++ parens (ST.unpack expr))
   case t of
     Left error -> do
