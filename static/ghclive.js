@@ -124,6 +124,7 @@ $(function () {
                 scrollToBottom('output');
             }
         }); // end ajax call
+        $("#expr").select();
         return false;
     }
 
