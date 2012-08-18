@@ -100,6 +100,7 @@ function scrollToBottom(elem) { // pass in the id of the element you want scroll
 
 function load() {
     $.get('/loader', function(res) {
+        console.log("" + res);
         if ("" + res === "Main,Helper")
             $("#editormessages").text("");
         else
@@ -108,12 +109,6 @@ function load() {
 }
 
 $(function () {
-
-    // Make the server initialize an empty module in case the user does
-    // 'eval it' without entering anything into the editor. Actually we
-    // shouldn't need to tell the server to do this, I suppose, so this
-    // is a bit of a hack.
-    load();
 
     $("#load").click(function() {
         load();
@@ -126,6 +121,7 @@ $(function () {
         var expr = $("#expr").val();
         var slot = makeResultSlot(expr);
         $("#output").append(slot);
+        load();
         $.ajax({
             type: "GET",
             url: "/eval",
