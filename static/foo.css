@@ -11,8 +11,8 @@ textarea, input {
 #output {
     font-family: monospace;
     font-size: 13px;
+    background-color: PaleGoldenRod;
     width: 75%;
     height:300px;
-    background-color: PaleGoldenRod;
     overflow-y: auto;
 }
