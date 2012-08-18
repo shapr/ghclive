@@ -52,6 +52,7 @@ import qualified Network.Wai.Handler.WebSockets as WS
 import qualified Network.WebSockets             as WS
 
 
+import           Prelude
 import qualified SeqMap                         as SM
 import           SignalHandlers
 
@@ -127,9 +128,11 @@ instance J.FromJSON AtomId where
    parseJSON (J.Array v) | V.length v == 2 = AtomId <$> J.parseJSON (v V.! 0) <*> J.parseJSON (v V.! 1)
    parseJSON _ = mzero
 
--- staticSite = static "static"
-staticSite = staticDevel "static"
-$(staticFiles "static")
+staticSiteFiles :: Static
+staticSiteFiles = $(embed "static")
+
+$(publicFiles "static")
+-- $(staticFiles "static")
 
 mkYesod "GHCLive" [parseRoutes|
 /        RootR   GET
@@ -147,12 +150,11 @@ main = do
   -- hint setup
   r  <- newMVar ([] :: [J.Value])
   h  <- newHint
-  st <- staticSite
   -- shared editor setup
   d  <- newMVar (emptyDoc, M.empty)
   u  <- newMVar (ClientId 0)
   let editor = Editor d u
-  let master = GHCLive r h editor st
+  let master = GHCLive r h editor staticSiteFiles
       s      = defaultSettings
                { settingsPort = 3000
                , settingsIntercept = WS.intercept (sockets editor) -- XXX expecting an Editor?
@@ -337,7 +339,7 @@ getEditR = defaultLayout $ do
                                 if(a.action === "doc") {
                                   doc.setDocument(a.doc);
                                   refresh = true;
-                                } else if(a.action === "clientid") {
+                                } else if(a.action == "clientid") {
                                   setClientId(a.clientId);
                                 } else if(a.action === "insert") {
                                   r = doc.applyOp(a);
@@ -355,7 +357,7 @@ getEditR = defaultLayout $ do
                         }
 
 function formatResult (res) {
-    var r = $('<div><span class="prompt">hint&gt;</span> <span class="expr">empty expr</span><div class="result"></div></div>');
+    var r = $('<div><div class="prompt">hint&gt;</div><div class="expr">empty expr</div><div class="result"></div></div>');
     r.find('.expr').text(res.expr);
     if(res.error) r.find('.result').text(res.error);
     else r.find('.result').append(res.result.result);
@@ -368,12 +370,6 @@ function scrollToBottom(elem) { // pass in the id of the element you want scroll
 }
 
 $(function () {
-
-    // Make the server initialize an empty module in case the user does 
-    // 'eval it' without entering anything into the editor. Actually we
-    // shouldn't need to tell the server to do this, I suppose, so this
-    // is a bit of a hack.
-    $.get('/loader');
 
     $("#load").click(function() {
         $.get('/loader');
