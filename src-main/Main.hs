@@ -22,6 +22,7 @@ import           Text.Blaze.Html5.Attributes    (class_, href, rel, src, type_)
 import           Yesod
 import           Yesod.Static
 
+import           Control.Applicative
 import           Control.Concurrent
 import           Control.Concurrent.MVar
 import           Control.Monad                  (forM_, forever, liftM, mzero, void)
@@ -30,8 +31,6 @@ import           Data.Aeson                     ((.:), (.=))
 import           Data.Char                      (isUpper)
 import qualified Data.Text                      as ST
 import           Data.Typeable
-import           Diagrams.Backend.SVG
-import           Diagrams.Prelude
 import           Network.Web.GHCLive.Display
 import           Text.Blaze
 import           Text.Blaze.Internal            (preEscapedText, text)

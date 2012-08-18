@@ -68,8 +68,6 @@ executable ghclive
     vector > 0.9,
     unordered-containers > 0.2,
     blaze-markup > 0.5,
-    diagrams-lib > 0.5,
-    diagrams-svg > 0.3,
     aeson > 0.6 && < 0.7,
     text > 0.11,
     yesod,
