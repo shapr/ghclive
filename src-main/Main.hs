@@ -127,11 +127,14 @@ instance J.FromJSON AtomId where
    parseJSON (J.Array v) | V.length v == 2 = AtomId <$> J.parseJSON (v V.! 0) <*> J.parseJSON (v V.! 1)
    parseJSON _ = mzero
 
-staticSiteFiles :: Static
-staticSiteFiles = $(embed "static")
+-- staticSiteFiles :: Static
+-- staticSiteFiles = $(embed "static")
 
-$(publicFiles "static")
--- $(staticFiles "static")
+staticSite :: IO Static
+staticSite = staticDevel "static"
+
+-- $(publicFiles "static")
+$(staticFiles "static")
 
 mkYesod "GHCLive" [parseRoutes|
 /        RootR   GET
@@ -149,11 +152,12 @@ main = do
   -- hint setup
   r  <- newMVar ([] :: [J.Value])
   h  <- newHint
+  ss <- staticSite
   -- shared editor setup
   d  <- newMVar (emptyDoc, M.empty)
   u  <- newMVar (ClientId 0)
   let editor = Editor d u
-  let master = GHCLive r h editor staticSiteFiles
+  let master = GHCLive r h editor ss -- staticSiteFiles
       s      = defaultSettings
                { settingsPort = 3000
                , settingsIntercept = WS.intercept (sockets editor) -- XXX expecting an Editor?
