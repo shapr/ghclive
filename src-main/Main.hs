@@ -269,7 +269,6 @@ cacheFile f = do
 getEditR :: Handler RepHtml
 getEditR = defaultLayout $ do
              addScriptRemote "https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"
-             addScript     (StaticR jquery_js)
              addScript     (StaticR codemirror_lib_codemirror_js)
              addScript     (StaticR codemirror_mode_haskell_haskell_js)
              addScript     (StaticR es6_shim_js)
@@ -382,7 +381,8 @@ $(function () {
         return false;
     });
 
-    $("#evalit").click(function() {
+    function evalit() {
+        console.log("hey evalit here");
         $.ajax({
             type: "GET",
             url: "/eval",
@@ -393,7 +393,9 @@ $(function () {
             }
         }); // end ajax call
         return false;
-    });
+    }
+
+    $("#evalit").click(evalit);
 
     $("#outputit").click(function() {
         $.ajax({
@@ -415,15 +417,14 @@ $(function () {
                       |]
              [whamlet|
                <h1>editor
-               <textarea #editor>
-               <form action=>
+               <form action="#">
+                 <textarea #editor>
                  <input type=submit value=load #load >
-                 <br>
+               <form action="#">
                  <input #expr >
                  <input type=submit value=evalit #evalit>
                  <br>
                  <input type=submit value=outputit #outputit>
-               <br>
                <div #output >output here
              |]
 
