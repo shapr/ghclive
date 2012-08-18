@@ -1,6 +1,6 @@
 /* style.css won't load, so we use foo.css */
 body {
-    font-family: : Georgia;
+    font-family: Georgia;
 }
 textarea, input {
     font-family: monospace;
