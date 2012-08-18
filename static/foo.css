@@ -8,11 +8,6 @@ textarea, input {
     width: 75%;
 }
 
-#code {
-    float: left;
-    height: 200px;
-}
-
 #output {
     font-family: monospace;
     font-size: 13px;
