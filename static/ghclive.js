@@ -100,7 +100,10 @@ function scrollToBottom(elem) { // pass in the id of the element you want scroll
 
 function load() {
     $.get('/loader', function(res) {
-        console.log("" + res);
+        if ("" + res === "Main,Helper")
+            $("#editormessages").text("");
+        else
+            $("#editormessages").text("" + res);
     });
 }
 
