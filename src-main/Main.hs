@@ -211,6 +211,7 @@ moduleHint ms = do
   -- save the file
   fname <- liftIO $ cacheFile ms
   let allfiles = ["Helper.hs", fname]
+  reset
   loadModules $ map (cachedir ++) allfiles
   ms <- getLoadedModules
   setTopLevelModules ms
