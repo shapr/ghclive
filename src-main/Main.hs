@@ -290,13 +290,13 @@ getEditR = defaultLayout $ do
                <h1>editor
                <form action="#">
                  <textarea #editor>
-                 <input type=submit value=load #load >
+                 <input type=submit value="Load from editor" #load >
                <form action="#">
                  <input #expr >
-                 <input type=submit value=evalit #evalit>
+                 <input type=submit value="Evaluate" #evalit>
                  <br>
-                 <input type=submit value=outputit #outputit>
-               <div #output >output here
+                 <input type=submit value="Refresh output" #outputit>
+               <div #output >
              |]
 
 insertAtom :: AtomId -> AtomId -> Char -> Document -> Document
