@@ -296,6 +296,7 @@ getEditR = defaultLayout $ do
                <h1>editor
                <form action="#">
                  <textarea #editor>
+                 <div #editormessages>
                  <input type=submit value="Load from editor" #load >
                <form action="#">
                  <input #expr >

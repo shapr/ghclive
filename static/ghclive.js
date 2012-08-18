@@ -102,6 +102,15 @@ function scrollToBottom(elem) { // pass in the id of the element you want scroll
     var elem = document.getElementById(elem);
     elem.scrollTop = elem.scrollHeight;
 }
+function load() {
+    $.get('/loader', function(res) {
+        console.log("" + res);
+        if ("" + res === "Main,Helper")
+            $("#editormessages").text("");
+        else
+            $("#editormessages").text("" + res);
+    });
+}
 
 function outputit(){
     $.ajax({
@@ -122,14 +131,10 @@ function outputit(){
 
 $(function () {
 
-    // Make the server initialize an empty module in case the user does
-    // 'eval it' without entering anything into the editor. Actually we
-    // shouldn't need to tell the server to do this, I suppose, so this
-    // is a bit of a hack.
-    $.get('/loader');
-
     $("#load").click(function() {
-        $.get('/loader');
+        load();
+        $("#expr").select();
+        $("#expr").focus();
         return false;
     });
 
@@ -137,6 +142,7 @@ $(function () {
         var expr = $("#expr").val();
         var slot = makeResultSlot(expr);
         $("#output").append(slot);
+        load();
         $.ajax({
             type: "GET",
             url: "/eval",
