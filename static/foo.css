@@ -18,6 +18,6 @@ textarea, input {
     font-size: 13px;
     width: 75%;
     height:300px;
-    background-color:Gray;
+    background-color: PaleGoldenRod;
     overflow-y: auto;
 }
