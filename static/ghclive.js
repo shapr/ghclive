@@ -108,6 +108,8 @@ $(function () {
 
     $("#load").click(function() {
         $.get('/loader');
+        $("#expr").select();
+        $("#expr").focus();
         return false;
     });
 
