@@ -382,7 +382,6 @@ $(function () {
     });
 
     function evalit() {
-        console.log("hey evalit here");
         $.ajax({
             type: "GET",
             url: "/eval",
