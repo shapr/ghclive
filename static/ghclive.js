@@ -104,11 +104,21 @@ function scrollToBottom(elem) { // pass in the id of the element you want scroll
 }
 function load() {
     $.get('/loader', function(res) {
-        console.log("" + res);
-        if ("" + res === "Main,Helper")
+        if ("" + res === "Main,Helper") {
             $("#editormessages").text("");
-        else
+        } else if (typeof res === "string") {
+            var em = $("#editormessages");
+            em.empty();
+            var lines = res.split("\n");
+            for (var i = 0; i < lines.length; ++i) {
+                console.log('line ' + i + ': ' + lines[i]);
+                em.append(lines[i]);
+                if (lines[i+1])
+                    em.append($('<br>'));
+            }
+        } else { // just paranoia
             $("#editormessages").text("" + res);
+        }
     });
 }
 
@@ -148,6 +158,11 @@ $(function () {
             url: "/eval",
             data: {expr: expr},
             success: function(res) {
+                // XXX This is probably pointless now that each evaluation
+                // causes the server to send out a refreshoutput message. 
+                // But maybe it still gets you a result display with lower
+                // latency (one less round trip, and not rewriting the whole
+                // output history) so I'm not nuking this yet.
                 fillInResultSlot(slot, res);
                 scrollToBottom('output');
             }
