@@ -87,8 +87,25 @@ function fillInResultSlot(slot, res) {
     if (res.error) {
         node.text(res.error);
     } else {
-        node.text('');
-        node.append(res.result.result);
+//        node.text('');
+//        node.append(res.result.result);
+        node.empty();
+        for(var i=0; i<res.result.length; i++) {
+            node.append(convertRes(res.result[i]));
+        }
+    }
+}
+
+function convertRes (res) {
+    switch(res.t) {
+        case "svg":
+           return $(res.r); // fixme add clickable zoom function
+        case "html":
+           return $(res.r);
+        case "text":
+            var r = $("<span></span>");
+            r.text(res.r);
+            return r;
     }
 }
 

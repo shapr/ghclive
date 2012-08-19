@@ -5,6 +5,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE DefaultSignatures    #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Network.Web.GHCLive.Display where
 
@@ -13,32 +14,42 @@ import qualified Data.Aeson                    as J
 import qualified Data.Aeson                    as A
 import           Data.Aeson.TH
 import qualified Data.Aeson.Types              as J
+import           Data.Char
 import           Data.Word
 import           Data.Int
 import           Data.Monoid
-import           Data.Text.Lazy hiding (span)
+import qualified Data.Text                     as T
+import qualified Data.Text.Lazy                as TL
 import           Data.Typeable
-import           Diagrams.Backend.SVG
-import           Diagrams.Prelude hiding ((<>), First, Last)
+import qualified Diagrams.Backend.SVG          as D
+import qualified Diagrams.Prelude              as D
 import           Text.Blaze.Html.Renderer.Text
-import           Text.Blaze.Html5
+import qualified Text.Blaze.Html5              as B
 import           Prelude hiding (span)
 
-data DisplayResult = DisplayResult {
-      clientType :: String, -- "SVG" "IMG" etc, changes how the browser-side javascript handles this result.
-      resources :: [String], -- images get loaded from the server
-      result :: Text -- actual result data
-      -- Luite has type for Haskell type?
+data ClientType = Html | Svg | Text deriving (Eq, Show, Enum)
+
+instance J.ToJSON ClientType where toJSON = J.toJSON . map toLower . show
+
+newtype DisplayResult = DisplayResult [DR] deriving (Eq, Monoid, Typeable, ToJSON)
+
+-- instance ToJSON DisplayResult where toJSON (DisplayResult rs) = J.object [ T.pack "results" .= rs ]
+
+data DR = DR {
+      clientType :: ClientType, -- "SVG" "IMG" etc, changes how the browser-side javascript handles this result.
+      result :: TL.Text            -- actual result data
       } deriving (Eq, Show, Typeable)
 
-instance Monoid DisplayResult where
-  mempty = DisplayResult "text" [] mempty
-  mappend (DisplayResult "svg" rs t) (DisplayResult "svg" rs' t') = DisplayResult "svg" (rs ++ rs') (t <> t')
-  mappend (DisplayResult "text" rs t) (DisplayResult "text" rs' t') = DisplayResult "text" (rs ++ rs') (t <> t')
-  mappend (DisplayResult "text" rs t) (DisplayResult "svg" rs' t') = DisplayResult "svg" (rs ++ rs') (renderHtml (span (toMarkup t)) <> t')
-  mappend (DisplayResult "svg" rs t) (DisplayResult "text" rs' t') = DisplayResult "text" (rs ++ rs') (t <> renderHtml (span (toMarkup t)))
+instance ToJSON DR where toJSON (DR c r) = J.object [ T.pack "t" .= c, T.pack "r" .= r ]
 
-$(deriveJSON id ''DisplayResult)
+text :: TL.Text -> DisplayResult
+text x = DisplayResult [ DR Text x ]
+
+html :: B.Markup -> DisplayResult
+html x = DisplayResult [ DR Html (renderHtml x) ]
+
+svg :: B.Markup -> DisplayResult
+svg x = DisplayResult [ DR Svg (renderHtml x) ]
 
 displayString :: String -> DisplayResult
 displayString = display
@@ -58,22 +69,30 @@ class Display a where
     displayList = displayListOf display
 
 displayEmpty :: DisplayResult
-displayEmpty = DisplayResult { clientType = "text", resources = [], result = pack "no result" }
+displayEmpty = DisplayResult []
 
-renderMyDiagramToSvg     :: Diagram SVG R2 -> Html
-renderMyDiagramToSvg dia = renderDia SVG (SVGOptions "output.file" (Dims 200 200)) (dia :: Diagram Diagrams.Backend.SVG.SVG R2)
+renderMyDiagramToSvg :: Double -> D.Diagram D.SVG D.R2 -> B.Html
+renderMyDiagramToSvg size dia = 
+   D.renderDia D.SVG (D.SVGOptions "output.file" (D.Dims size size)) dia
 
-instance (a ~ SVG, b ~ R2) => Display (Diagram a b) where
-  display d = DisplayResult { clientType="svg", result=renderHtml $ renderMyDiagramToSvg d, resources = []}
+instance Display DisplayResult where
+  display d = d
 
-instance Display Text where
-  display d = DisplayResult { clientType="text", result= d, resources = []}
+instance (a ~ D.SVG, b ~ D.R2) => Display (D.Diagram a b) where
+  display d      = svg (renderMyDiagramToSvg 150 d)
+  displayList ds = displayList $ map (svg . renderMyDiagramToSvg 75) ds
+
+instance Display TL.Text where
+  display d = text d
+
+instance Display T.Text where
+  display d = text (TL.fromStrict d)
 
 instance Display a => Display [a] where
   display = displayList
 
-instance Display Markup where
-  display d = DisplayResult{clientType="svg", result= renderHtml $ p d, resources =[] }
+instance Display B.Markup where
+  display d = html d
 
 instance (Display a, Display b) => Display (a,b) where
   display (a, b) = display "(" <> display a <> display "," <> display b <> display ")"
@@ -95,10 +114,11 @@ instance Display Integer
 instance Display Float
 instance Display Double
 instance Display Char where
-  displayList = display . pack
+  displayList = display . TL.pack
 instance Display ()
 instance Show a => Display (Maybe a)
 instance Show a => Display (Sum a)
 instance Show a => Display (Product a)
 instance Show a => Display (First a)
 instance Show a => Display (Last a)
+
