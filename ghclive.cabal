@@ -43,8 +43,7 @@ Library
   -- Directories containing source files.
   hs-source-dirs:      src
   exposed-modules: 
-    Network.Web.GHCLive.Display,
-    SignalHandlers
+    Network.Web.GHCLive.Display
 
 executable ghclive
   -- .hs or .lhs file containing the Main module.
