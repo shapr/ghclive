@@ -15,3 +15,8 @@ textarea, input {
     height:300px;
     overflow-y: auto;
 }
+
+#editormessages {
+    height: 50px;
+    overflow-y: auto;
+}
