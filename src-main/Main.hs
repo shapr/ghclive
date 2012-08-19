@@ -167,6 +167,7 @@ main = do
                { settingsPort = 3000
                , settingsIntercept = WS.intercept (sockets editor)
                }
+  putStrLn $ "To use ghcLiVE, point your web browser to http://localhost:" ++ show (settingsPort s)
   runSettings s =<< (toWaiApp master :: IO Yesod.Application)
 
 getLoaderR = do
