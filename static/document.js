@@ -24,13 +24,13 @@ SerMap.prototype.get = function(k) {
 
 // specialized atom map, can cause problems with high (> 2000) client ids
 function AtomMap() {
-  this.map = new Map();
+  this.map = {};
 }
 AtomMap.prototype.set = function(k,v) {
-  this.map.set(k[0]*k[1],v);
+  this.map[k[0]*k[1]+1] = v;
 }
 AtomMap.prototype.get = function(k,v) {
-  this.map.get(k[0]*k[1]);
+  return this.map[k[0]*k[1]+1];
 }
 
 spliceArr = function(arr,i,n,a) {
@@ -92,15 +92,15 @@ Document.prototype.setDocument = function(d) {
 //  console.log('setdocument');
 //  console.log(d);
   this.lines = [];
-  this.atoms = new SerMap();
+  this.atoms = new AtomMap();
   var currentLine = [];
   var atomId = function(n) { return [d[n][0],d[n][1]] };
-  var newAtoms = [];
+  var newAtoms = new Array(d.length);
   for(var i=0;i<d.length;i++) {
     var x = d[i];
     var aid    = atomId(i);
     var atom   = { id: aid, ch: x[2], removed: x[3] };
-    newAtoms.push(atom);
+    newAtoms[i] = atom;
     this.atoms.set(aid,atom);
     if(!atom.removed || (aid[0] == 0 && aid[1] == 0)) {
       if(atom.ch == '\n') {
