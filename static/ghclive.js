@@ -85,7 +85,7 @@ function makeResultSlot(expr) {
 function fillInResultSlot(slot, res) {
     var node = slot.find('.result');
     if (res.error) {
-        node.text(res.error);
+        formatErrors(node, res.error);
     } else {
 //        node.text('');
 //        node.append(res.result.result);
@@ -115,6 +115,28 @@ function formatResult (res) {
     return slot;
 }
 
+function formatErrors(node, message) {
+    node.empty();
+    var lines = message.split("\n");
+    for (var i = 0; i < lines.length; ++i) {
+        // console.log('line ' + i + ': ' + lines[i]);
+        node.append(spacify(lines[i]));
+        if (lines[i+1])
+            node.append($('<br>'));
+    }
+}
+
+// Change leading spaces into nbsp entities.
+function spacify(line) {
+    var i;
+    for (i = 0; i < line.length && line[i] === " "; ++i)
+        ;
+    var result = "";
+    for (; 0 < i; --i)
+        result += "&nbsp;";
+    return result + line.substring(i);
+}
+
 function scrollToBottom(elem) { // pass in the id of the element you want scrolled to bottom
     var elem = document.getElementById(elem);
     elem.scrollTop = elem.scrollHeight;
@@ -124,15 +146,7 @@ function load(success) {
         if ("" + res === "Main,Helper") {
             $("#editormessages").text("");
         } else if (typeof res === "string") {
-            var em = $("#editormessages");
-            em.empty();
-            var lines = res.split("\n");
-            for (var i = 0; i < lines.length; ++i) {
-                console.log('line ' + i + ': ' + lines[i]);
-                em.append(lines[i]);
-                if (lines[i+1])
-                    em.append($('<br>'));
-            }
+            formatErrors($("#editormessages"), res);
         } else { // just paranoia
             $("#editormessages").text("" + res);
         }
