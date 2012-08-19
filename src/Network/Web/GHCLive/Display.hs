@@ -3,6 +3,7 @@
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE DefaultSignatures    #-}
 
 module Network.Web.GHCLive.Display where
 
@@ -49,6 +50,8 @@ instance FromJSON DisplayResult where
 -}
 class Display a where
     display :: a -> DisplayResult
+    default display :: Show a => a -> DisplayResult
+    display = display . show
 
 displayEmpty = DisplayResult { clientType = "text", resources = [], result = "no result" }
 
@@ -80,3 +83,10 @@ instance (ToMarkup a, ToMarkup b) => Display (a,b) where
 
 instance (ToMarkup a, ToMarkup b) => ToMarkup (a,b) where
   toMarkup (a,b) = mconcat [toMarkup a,toMarkup b]
+
+instance Display Int
+instance Display Integer
+instance Display Float
+instance Display Double
+instance Display Char
+instance Display ()
