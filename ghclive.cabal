@@ -81,4 +81,3 @@ executable ghclive
 
   -- Directories containing source files.
   hs-source-dirs:  src-main
-  exposed-modules: SignalHandlers
