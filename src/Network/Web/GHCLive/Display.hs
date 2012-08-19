@@ -161,3 +161,6 @@ instance Display () where display () = displayString "()"
 -- generic instances
 instance Display a => Display (Maybe a)
 instance (Display a, Display b) => Display (Either a b)
+
+instance Show B.Markup where
+  show = TL.unpack . renderHtml
