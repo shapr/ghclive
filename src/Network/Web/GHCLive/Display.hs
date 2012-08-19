@@ -60,11 +60,11 @@ displayChar :: Char -> DisplayResult
 displayChar = displayString . return
 
 displayListOf :: (a -> DisplayResult) ->  [a] -> DisplayResult
-displayListOf _     []     = display "[]"
-displayListOf showx (x:xs) = display "[" <> showx x <> showl xs
+displayListOf _     []     = displayString "[]"
+displayListOf showx (x:xs) = displayChar '[' <> showx x <> showl xs
   where
-    showl []     = display "]"
-    showl (y:ys) = display "," <> showx y <> showl ys
+    showl []     = displayChar ']'
+    showl (y:ys) = displayChar ',' <> showx y <> showl ys
 
 class GDisplay f where
   gdisplay :: f a -> DisplayResult
