@@ -102,7 +102,7 @@ function scrollToBottom(elem) { // pass in the id of the element you want scroll
     var elem = document.getElementById(elem);
     elem.scrollTop = elem.scrollHeight;
 }
-function load() {
+function load(success) {
     $.get('/loader', function(res) {
         if ("" + res === "Main,Helper") {
             $("#editormessages").text("");
@@ -119,6 +119,7 @@ function load() {
         } else { // just paranoia
             $("#editormessages").text("" + res);
         }
+        if (success) success();
     });
 }
 
@@ -152,21 +153,22 @@ $(function () {
         var expr = $("#expr").val();
         var slot = makeResultSlot(expr);
         $("#output").append(slot);
-        load();
-        $.ajax({
-            type: "GET",
-            url: "/eval",
-            data: {expr: expr},
-            success: function(res) {
-                // XXX This is probably pointless now that each evaluation
-                // causes the server to send out a refreshoutput message. 
-                // But maybe it still gets you a result display with lower
-                // latency (one less round trip, and not rewriting the whole
-                // output history) so I'm not nuking this yet.
-                fillInResultSlot(slot, res);
-                scrollToBottom('output');
-            }
-        }); // end ajax call
+        load(function() {
+            $.ajax({
+                type: "GET",
+                url: "/eval",
+                data: {expr: expr},
+                success: function(res) {
+                    // XXX This is probably pointless now that each evaluation
+                    // causes the server to send out a refreshoutput message. 
+                    // But maybe it still gets you a result display with lower
+                    // latency (one less round trip, and not rewriting the whole
+                    // output history) so I'm not nuking this yet.
+                    fillInResultSlot(slot, res);
+                    scrollToBottom('output');
+                }
+            });
+        });
         $("#expr").select();
         return false;
     }
