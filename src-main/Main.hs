@@ -282,7 +282,7 @@ cacheFile f = do
 {-- shared editor --}
 getEditR :: Handler RepHtml
 getEditR = defaultLayout $ do
-             addScriptRemote "https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"
+             addScript     (StaticR jquery_js)
              addScript     (StaticR codemirror_lib_codemirror_js)
              addScript     (StaticR codemirror_mode_haskell_haskell_js)
              addScript     (StaticR es6_shim_js)
