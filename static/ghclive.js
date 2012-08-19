@@ -104,11 +104,21 @@ function scrollToBottom(elem) { // pass in the id of the element you want scroll
 }
 function load() {
     $.get('/loader', function(res) {
-        console.log("" + res);
-        if ("" + res === "Main,Helper")
+        if ("" + res === "Main,Helper") {
             $("#editormessages").text("");
-        else
+        } else if (typeof res === "string") {
+            var em = $("#editormessages");
+            em.empty();
+            var lines = res.split("\n");
+            for (var i = 0; i < lines.length; ++i) {
+                console.log('line ' + i + ': ' + lines[i]);
+                em.append(lines[i]);
+                if (lines[i+1])
+                    em.append($('<br>'));
+            }
+        } else { // just paranoia
             $("#editormessages").text("" + res);
+        }
     });
 }
 
