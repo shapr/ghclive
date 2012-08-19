@@ -17,6 +17,7 @@ import qualified Data.Text.Lazy                 as T
 import           Language.Haskell.Interpreter   hiding (get)
 import           Network.Curl.Download
 import           Network.Wai.Handler.Warp       (Settings(..), defaultSettings, runSettings)
+import           System.Directory               (createDirectoryIfMissing, getTemporaryDirectory)
 import qualified Text.Blaze.Html5               as H
 import           Text.Blaze.Html5.Attributes    (class_, href, rel, src, type_)
 import           Yesod
@@ -149,6 +150,10 @@ instance Yesod GHCLive
 
 main :: IO ()
 main = do
+  -- filesystem setup
+  tmp <- getTemporaryDirectory
+  createDirectoryIfMissing False (tmp ++ "/ghclive/")
+  writeFile "module Helper where\nimport Diagrams.Backend.SVG\nimport Diagrams.Prelude\nimport Network.Web.GHCLive.Display\n" (tmp ++ "/ghclive/Helper.hs")
   -- hint setup
   r  <- newMVar ([] :: [J.Value])
   h  <- newHint
@@ -209,7 +214,7 @@ getEvalR = do
              jsonToRepJson jsres
 
 interpretHint :: (Typeable a, MonadInterpreter m) => String -> m a
-interpretHint expr = interpret expr as
+interpretHint expr = setUseLanguageExtensions True >> set [ languageExtensions := [ ExtendedDefaultRules ] ] >> interpret expr as
 
 moduleHint :: MonadInterpreter m => String -> m [ModuleName]
 moduleHint ms = do
