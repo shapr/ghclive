@@ -179,12 +179,7 @@ getLoaderR = do
     Right displayres -> jsonToRepJson displayres
 
 getRootR :: Handler RepHtml
-getRootR = defaultLayout [whamlet|
-                            <h1>GHC Live
-                            <ul>
-                              <li>
-                                <a href=@{EditR}>Collaborative Editor
-                         |]
+getRootR = redirect EditR
 
 getResultsR = do
   y <- getYesod
@@ -279,9 +274,23 @@ cacheFile f = do
   return "Main.hs"
 
 
+liveLayout :: Widget -> Handler RepHtml
+liveLayout w = do
+  p <- widgetToPageContent w
+  hamletToRepHtml [hamlet|$newline never
+      $doctype 5
+      <html>
+        <head>
+          <title>GHCLive
+          ^{pageHead p}
+        <body>
+          ^{pageBody p}
+    |]
+
+
 {-- shared editor --}
 getEditR :: Handler RepHtml
-getEditR = defaultLayout $ do
+getEditR = liveLayout $ do
              addScript     (StaticR jquery_js)
              addScript     (StaticR codemirror_lib_codemirror_js)
              addScript     (StaticR codemirror_mode_haskell_haskell_js)
