@@ -40,27 +40,6 @@ instance Monoid DisplayResult where
 
 $(deriveJSON id ''DisplayResult)
 
--- instance ToJSON DisplayResult where
---   toJSON dr = A.object ["result" .= result dr,
---                         "clientType" .= clientType dr,
---                         "resources" .= resources dr
---                        ]
-
-
-
--- instance FromJSON DisplayResult -- requires GHC.Generics
--- instance ToJSON DisplayResult -- requires GHC.Generics
-{- since this first hack didn't work, we take another option from
-http://hackage.haskell.org/packages/archive/aeson/0.6.0.2/doc/html/Data-Aeson.html#t:FromJSON
-instance FromJSON DisplayResult where
-    parseJSON (A.Object dr) = DisplayResult {
-                                  result = dr .: "result"
-                                , clientType = dr .: "clientType"
-                                , resources = dr .: "resources"
-                                }
-    parseJSON _             = mzero
--}
-
 displayString :: String -> DisplayResult
 displayString = display
 
@@ -123,18 +102,3 @@ instance Show a => Display (Sum a)
 instance Show a => Display (Product a)
 instance Show a => Display (First a)
 instance Show a => Display (Last a)
-
--- overlaps with String instance
--- instance ToMarkup d => Display [d] where
---   display d = display $ mconcat $ Prelude.map toHtml d
-
---instance Display [(Html,Html)] where
---  display d = display $ mconcat $ Prelude.map toHtml d
-
---instance (ToMarkup a, ToMarkup b) => Display (a,b) where
---  display (a,b) = display $ mconcat [toMarkup a,toMarkup b]
--- Other useful instances?
-
--- instance (ToMarkup a, ToMarkup b) => ToMarkup (a,b) where
---  toMarkup (a,b) = mconcat [toMarkup a,toMarkup b]
-
