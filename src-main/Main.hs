@@ -31,6 +31,7 @@ import           Control.Monad.Error.Class
 import           Data.Aeson                     ((.:), (.=))
 import           Data.Char                      (isUpper)
 import qualified Data.Text                      as ST
+import qualified Data.Text.Lazy.Encoding        as LTE
 import           Data.Typeable
 import           Network.Web.GHCLive.Display
 import           Text.Blaze
@@ -392,22 +393,22 @@ instance J.ToJSON Operation where
 ---
 
 
-receiveJson :: J.FromJSON a => WS.WebSockets WS.Hybi10 a
+receiveJson :: J.FromJSON a => WS.WebSockets WS.Hybi00 a
 receiveJson = do
   bs <- WS.receiveData
   case J.decode' bs of
     Nothing -> sendJson (jsonError "invalid message") >> receiveJson
     Just a  -> return a
 
-sendJson :: J.ToJSON a => a -> WS.WebSockets WS.Hybi10 ()
+sendJson :: J.ToJSON a => a -> WS.WebSockets WS.Hybi00 ()
 sendJson j = do
     msg <- mkJsonMsg (J.toJSON j)
-    WS.sendBinaryData (J.encode msg)
+    WS.sendTextData (LTE.decodeUtf8 $ J.encode msg)
 
-sendSinkJson :: (MonadIO m, J.ToJSON a) => WS.Sink WS.Hybi10 -> a -> m ()
+sendSinkJson :: (MonadIO m, J.ToJSON a) => WS.Sink WS.Hybi00 -> a -> m ()
 sendSinkJson sink j = do
   msg <- mkJsonMsg (J.toJSON j)
-  liftIO $ WS.sendSink sink $ WS.binaryData (J.encode msg)
+  liftIO $ WS.sendSink sink $ WS.textData (LTE.decodeUtf8 $ J.encode msg)
 
 -- if we send an object, and it does not have a time field, inject it
 mkJsonMsg :: MonadIO m => Value -> m J.Value
@@ -419,14 +420,14 @@ mkJsonMsg x = return x
 jsonError :: String -> J.Value
 jsonError msg = J.object [ "error" .= msg ]
 
-sockets :: Editor -> WS.Request -> WS.WebSockets WS.Hybi10 ()
+sockets :: Editor -> WS.Request -> WS.WebSockets WS.Hybi00 ()
 sockets y req
   | WS.requestPath req == "/edit"  = accept editSocket
   | otherwise                      = WS.rejectRequest req "Not found"
   where
     accept a = WS.acceptRequest req >> a y
 
-editSocket :: Editor -> WS.WebSockets WS.Hybi10 ()
+editSocket :: Editor -> WS.WebSockets WS.Hybi00 ()
 editSocket e = do
   client <- mkClientId e
   sendInit e client
@@ -462,7 +463,7 @@ currentVersion d =
                                     ]
     in  J.toJSON $ map encodeAtom xs
 
-sendInit :: Editor -> ClientId -> WS.WebSockets WS.Hybi10 ()
+sendInit :: Editor -> ClientId -> WS.WebSockets WS.Hybi00 ()
 sendInit e c = do
   d <- liftIO (readMVar $ doc e)
   sendJson $ actions [ J.object [ "action" .= t"clientid", "clientId" .= c]
