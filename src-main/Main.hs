@@ -304,7 +304,7 @@ getEditR = defaultLayout $ do
                  <div #editormessages>
                  <input type=submit value="Load from editor" #load>
                <form action="#">
-                 <input placeholder="Enter a Haskell expression" #expr>
+                 <textarea placeholder="Enter a Haskell expression" #expr>
                  <input type=submit value="Evaluate" #evalit>
                  <br>
                  <input type=submit value="Refresh output" #outputit>
