@@ -175,10 +175,10 @@ getLoaderR = do
 
 getRootR :: Handler RepHtml
 getRootR = defaultLayout [whamlet|
-                            <h1>websockets demo
+                            <h1>GHC Live
                             <ul>
                               <li>
-                                <a href=@{EditR}>editor
+                                <a href=@{EditR}>Collaborative Editor
                          |]
 
 getResultsR = do
