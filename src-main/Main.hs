@@ -214,7 +214,7 @@ getEvalR = do
              jsonToRepJson jsres
 
 interpretHint :: (Typeable a, MonadInterpreter m) => String -> m a
-interpretHint expr = interpret expr as
+interpretHint expr = setUseLanguageExtensions True >> set [ languageExtensions := [ ExtendedDefaultRules ] ] >> interpret expr as
 
 moduleHint :: MonadInterpreter m => String -> m [ModuleName]
 moduleHint ms = do
