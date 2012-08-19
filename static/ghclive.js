@@ -148,6 +148,11 @@ $(function () {
             url: "/eval",
             data: {expr: expr},
             success: function(res) {
+                // XXX This is probably pointless now that each evaluation
+                // causes the server to send out a refreshoutput message. 
+                // But maybe it still gets you a result display with lower
+                // latency (one less round trip, and not rewriting the whole
+                // output history) so I'm not nuking this yet.
                 fillInResultSlot(slot, res);
                 scrollToBottom('output');
             }
