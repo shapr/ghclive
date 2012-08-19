@@ -201,7 +201,7 @@ getEvalR = do
   -- get the clients from the editor document (see applyOps for an example)
   (_, clients) <- liftIO $ readMVar (doc $ editor y)
   -- - call pushToClients with the clients and the JSON message you want to send, for example: object [ "refresh" .= True ]
-  (t :: Either InterpreterError DisplayResult) <- liftIO . performHint (hint y) $ interpretHint ("display " ++ parens (ST.unpack expr))
+  (t :: Either InterpreterError DisplayResult) <- liftIO . performHint (hint y) $ interpretHint ("displaying " ++ parens (ST.unpack expr))
   pushToClients clients $ object [ "refreshoutput" .= True ]
   case t of
     Left error -> do
