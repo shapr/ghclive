@@ -1,9 +1,10 @@
 {-# LANGUAGE DeriveDataTypeable   #-}
 {-# LANGUAGE FlexibleInstances    #-}
--- {-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE DefaultSignatures    #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
@@ -23,6 +24,7 @@ import qualified Data.Text.Lazy                as TL
 import           Data.Typeable
 import qualified Diagrams.Backend.SVG          as D
 import qualified Diagrams.Prelude              as D
+import           GHC.Generics
 import           Text.Blaze.Html.Renderer.Text
 import qualified Text.Blaze.Html5              as B
 import           Prelude hiding (span)
@@ -52,7 +54,10 @@ svg :: B.Markup -> DisplayResult
 svg x = DisplayResult [ DR Svg (renderHtml x) ]
 
 displayString :: String -> DisplayResult
-displayString = display
+displayString = text . TL.pack
+
+displayChar :: Char -> DisplayResult
+displayChar = displayString . return
 
 displayListOf :: (a -> DisplayResult) ->  [a] -> DisplayResult
 displayListOf _     []     = display "[]"
@@ -61,32 +66,63 @@ displayListOf showx (x:xs) = display "[" <> showx x <> showl xs
     showl []     = display "]"
     showl (y:ys) = display "," <> showx y <> showl ys
 
+class GDisplay f where
+  gdisplay :: f a -> DisplayResult
+
+instance GDisplay U1 where
+  gdisplay U1 = mempty
+
+instance Display a => GDisplay (K1 i a) where
+  gdisplay (K1 a) = display a
+
+instance (GDisplay f, GDisplay g) => GDisplay (f :+: g) where
+  gdisplay (L1 f) = gdisplay f
+  gdisplay (R1 g) = gdisplay g
+
+instance (GDisplay f, GDisplay g) => GDisplay (f :*: g) where
+  gdisplay (f :*: g) = gdisplay f <> displayChar ' ' <> gdisplay g
+
+instance (Constructor c, GDisplay f) => GDisplay (M1 C c f) where
+  gdisplay m@(M1 x) = displayString (conName m) <> displayChar ' ' <> gdisplay x
+
+instance GDisplay f => GDisplay (M1 S c f) where
+  gdisplay (M1 x) = gdisplay x
+
+instance GDisplay f => GDisplay (M1 D c f) where
+  gdisplay (M1 x) = gdisplay x
+
 class Display a where
-    display :: a -> DisplayResult
-    default display :: Show a => a -> DisplayResult
-    display = display . show
     displayList :: [a] -> DisplayResult
     displayList = displayListOf display
+
+    display :: a -> DisplayResult
+    default display :: (Generic a, GDisplay (Rep a)) => a -> DisplayResult
+    display = gdisplay . from
+
+{-
+    default display :: Show a => a -> DisplayResult
+    display = display . show
+-}
 
 displayEmpty :: DisplayResult
 displayEmpty = DisplayResult []
 
 renderMyDiagramToSvg :: Double -> D.Diagram D.SVG D.R2 -> B.Html
-renderMyDiagramToSvg size dia = 
+renderMyDiagramToSvg size dia =
    D.renderDia D.SVG (D.SVGOptions "output.file" (D.Dims size size)) dia
 
 instance Display DisplayResult where
   display d = d
 
 instance (a ~ D.SVG, b ~ D.R2) => Display (D.Diagram a b) where
-  display d      = svg (renderMyDiagramToSvg 150 d)
-  displayList ds = displayList $ map (svg . renderMyDiagramToSvg 75) ds
+  display     = svg . renderMyDiagramToSvg 150
+  displayList = displayListOf (svg . renderMyDiagramToSvg 75)
 
 instance Display TL.Text where
-  display d = text d
+  display d = displayChar '"' <> text d <> displayChar '"'
 
 instance Display T.Text where
-  display d = text (TL.fromStrict d)
+  display d = displayChar '"' <> text (TL.fromStrict d) <> displayChar '"'
 
 instance Display a => Display [a] where
   display = displayList
@@ -95,30 +131,29 @@ instance Display B.Markup where
   display d = html d
 
 instance (Display a, Display b) => Display (a,b) where
-  display (a, b) = display "(" <> display a <> display "," <> display b <> display ")"
+  display (a, b) = displayChar '(' <> display a <> displayChar ',' <> display b <> displayChar ')'
 
 instance (Display a, Display b, Display c) => Display (a,b,c) where
-  display (a, b, c) = display "(" <> display a <> display "," <> display b <> display "," <> display c <> display ")"
+  display (a, b, c) = displayChar '(' <> display a <> displayChar ',' <> display b <> displayChar ',' <> display c <> displayChar ')'
 
-instance Display Int
-instance Display Int8
-instance Display Int16
-instance Display Int32
-instance Display Int64
-instance Display Word
-instance Display Word8
-instance Display Word16
-instance Display Word32
-instance Display Word64
-instance Display Integer
-instance Display Float
-instance Display Double
+instance Display Int where display = displayString . show
+instance Display Int8 where display = displayString . show
+instance Display Int16 where display = displayString . show
+instance Display Int32 where display = displayString . show
+instance Display Int64 where display = displayString . show
+instance Display Word where display = displayString . show
+instance Display Word8 where display = displayString . show
+instance Display Word16 where display = displayString . show
+instance Display Word32 where display = displayString . show
+instance Display Word64 where display = displayString . show
+instance Display Integer where display = displayString . show
+instance Display Float where display = displayString . show
+instance Display Double where display = displayString . show
 instance Display Char where
+  display = displayString . show
   displayList = display . TL.pack
-instance Display ()
-instance Show a => Display (Maybe a)
-instance Show a => Display (Sum a)
-instance Show a => Display (Product a)
-instance Show a => Display (First a)
-instance Show a => Display (Last a)
+instance Display () where display () = displayString "()"
 
+-- generic instances
+instance Display a => Display (Maybe a)
+instance (Display a, Display b) => Display (Either a b)
