@@ -66,6 +66,10 @@ displayListOf showx (x:xs) = displayChar '[' <> showx x <> showl xs
     showl []     = displayChar ']'
     showl (y:ys) = displayChar ',' <> showx y <> showl ys
 
+-- | Too fool ExtendedDefaultRules into firing
+displaying :: (Display a, Show a) => a -> DisplayResult
+displaying = display
+
 class GDisplay f where
   gdisplay :: f a -> DisplayResult
 
@@ -157,3 +161,6 @@ instance Display () where display () = displayString "()"
 -- generic instances
 instance Display a => Display (Maybe a)
 instance (Display a, Display b) => Display (Either a b)
+
+instance Show B.Markup where
+  show = TL.unpack . renderHtml

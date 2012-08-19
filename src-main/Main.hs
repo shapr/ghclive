@@ -153,7 +153,7 @@ main = do
   -- filesystem setup
   tmp <- getTemporaryDirectory
   createDirectoryIfMissing False (tmp ++ "/ghclive/")
-  writeFile "module Helper where\nimport Diagrams.Backend.SVG\nimport Diagrams.Prelude\nimport Network.Web.GHCLive.Display\n" (tmp ++ "/ghclive/Helper.hs")
+  -- XXX save Helper.hs to tmpdir here!
   -- hint setup
   r  <- newMVar ([] :: [J.Value])
   h  <- newHint
@@ -183,7 +183,7 @@ getRootR = defaultLayout [whamlet|
                             <h1>GHC Live
                             <ul>
                               <li>
-                                <a href=@{EditR}>Editor
+                                <a href=@{EditR}>Collaborative Editor
                          |]
 
 getResultsR = do
@@ -201,7 +201,7 @@ getEvalR = do
   -- get the clients from the editor document (see applyOps for an example)
   (_, clients) <- liftIO $ readMVar (doc $ editor y)
   -- - call pushToClients with the clients and the JSON message you want to send, for example: object [ "refresh" .= True ]
-  (t :: Either InterpreterError DisplayResult) <- liftIO . performHint (hint y) $ interpretHint ("display " ++ parens (ST.unpack expr))
+  (t :: Either InterpreterError DisplayResult) <- liftIO . performHint (hint y) $ interpretHint ("displaying " ++ parens (ST.unpack expr))
   pushToClients clients $ object [ "refreshoutput" .= True ]
   case t of
     Left error -> do
@@ -214,7 +214,7 @@ getEvalR = do
              jsonToRepJson jsres
 
 interpretHint :: (Typeable a, MonadInterpreter m) => String -> m a
-interpretHint expr = interpret expr as
+interpretHint expr = setUseLanguageExtensions True >> set [ languageExtensions := [ ExtendedDefaultRules ] ] >> interpret expr as
 
 moduleHint :: MonadInterpreter m => String -> m [ModuleName]
 moduleHint ms = do
@@ -282,7 +282,7 @@ cacheFile f = do
 {-- shared editor --}
 getEditR :: Handler RepHtml
 getEditR = defaultLayout $ do
-             addScriptRemote "https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"
+             addScript     (StaticR jquery_js)
              addScript     (StaticR codemirror_lib_codemirror_js)
              addScript     (StaticR codemirror_mode_haskell_haskell_js)
              addScript     (StaticR es6_shim_js)
