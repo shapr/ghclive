@@ -153,7 +153,7 @@ main = do
   -- filesystem setup
   tmp <- getTemporaryDirectory
   createDirectoryIfMissing False (tmp ++ "/ghclive/")
-  writeFile "module Helper where\nimport Diagrams.Backend.SVG\nimport Diagrams.Prelude\nimport Network.Web.GHCLive.Display\n" (tmp ++ "/ghclive/Helper.hs")
+  -- XXX save Helper.hs to tmpdir here!
   -- hint setup
   r  <- newMVar ([] :: [J.Value])
   h  <- newHint
