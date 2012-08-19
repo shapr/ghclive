@@ -8,6 +8,7 @@ import           Diagrams.Backend.SVG
 import           Diagrams.Prelude
 import           Network.Web.GHCLive.Display
 import           Text.Blaze.Internal
+import           Prelude
 
 spike :: Trail R2
 spike = fromOffsets . map r2 $ [(1,3), (1,-3)]
