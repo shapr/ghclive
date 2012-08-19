@@ -66,6 +66,10 @@ displayListOf showx (x:xs) = displayChar '[' <> showx x <> showl xs
     showl []     = displayChar ']'
     showl (y:ys) = displayChar ',' <> showx y <> showl ys
 
+-- | Too fool ExtendedDefaultRules into firing
+displaying :: (Display a, Show a) => a -> DisplayResult
+displaying = display
+
 class GDisplay f where
   gdisplay :: f a -> DisplayResult
 
