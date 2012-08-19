@@ -307,7 +307,7 @@ getEditR = liveLayout $ do
                            height: 500px;
                          }
                       |]
-             [whamlet|
+             [whamlet|$newline never
                <h1>GHC Live
                <form action="#">
                  <textarea #editor>
