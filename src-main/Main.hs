@@ -180,10 +180,10 @@ getLoaderR = do
 
 getRootR :: Handler RepHtml
 getRootR = defaultLayout [whamlet|
-                            <h1>websockets demo
+                            <h1>GHC Live
                             <ul>
                               <li>
-                                <a href=@{EditR}>editor
+                                <a href=@{EditR}>Editor
                          |]
 
 getResultsR = do
@@ -287,6 +287,7 @@ getEditR = defaultLayout $ do
              addScript     (StaticR codemirror_mode_haskell_haskell_js)
              addScript     (StaticR es6_shim_js)
              addScript     (StaticR document_js)
+             -- addScript     (StaticR jquery_infieldlabel_js)
              addStylesheet (StaticR codemirror_lib_codemirror_css)
              addStylesheet (StaticR foo_css)
              addScript     (StaticR ghclive_js)
@@ -296,19 +297,18 @@ getEditR = defaultLayout $ do
                            height: 500px;
                          }
                       |]
-
              [whamlet|
-               <h1>editor
+               <h1>GHC Live
                <form action="#">
                  <textarea #editor>
                  <div #editormessages>
-                 <input type=submit value="Load from editor" #load >
+                 <input type=submit value="Load from editor" #load>
                <form action="#">
-                 <input #expr >
+                 <input placeholder="Enter a Haskell expression" #expr>
                  <input type=submit value="Evaluate" #evalit>
                  <br>
                  <input type=submit value="Refresh output" #outputit>
-               <div #output >
+               <div #output>
              |]
 
 insertAtom :: AtomId -> AtomId -> Char -> Document -> Document

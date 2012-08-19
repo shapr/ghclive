@@ -166,6 +166,10 @@ $(function () {
         return false;
     });
 
+    $(document).ready(function(){
+      $("label").inFieldLabels();
+    });
+
     function evalit() {
         var expr = $("#expr").val();
         var slot = makeResultSlot(expr);
