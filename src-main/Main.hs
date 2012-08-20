@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -8,6 +9,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
+
 module Main where
 import           Control.Monad.Trans
 import qualified Data.ByteString                as BS
@@ -128,13 +130,24 @@ instance J.FromJSON AtomId where
    parseJSON (J.Array v) | V.length v == 2 = AtomId <$> J.parseJSON (v V.! 0) <*> J.parseJSON (v V.! 1)
    parseJSON _ = mzero
 
--- staticSiteFiles :: Static
--- staticSiteFiles = $(embed "static")
+staticDir = "static"
+
+staticSiteFiles :: Static
+staticSiteFiles = $(embed "static")
 
 staticSite :: IO Static
-staticSite = staticDevel "static"
+staticSite = do
+#ifdef DEVELOPMENT
+  putStrLn ("using web files from: " ++ staticDir ++ "/")
+  Static.staticDevel staticDir
+#else
+  putStrLn "using embedded web files"
+  return $(embed "static")
+#endif
+-- switch to this when working on the javascript to prevent recompiling each time
+-- staticSite :: IO Static
+-- staticSite = staticDevel "static"
 
--- $(publicFiles "static")
 $(staticFiles "static")
 
 mkYesod "GHCLive" [parseRoutes|
@@ -164,7 +177,7 @@ main = do
   d  <- newMVar (emptyDoc, M.empty)
   u  <- newMVar (ClientId 0)
   let editor = Editor d u
-  let master = GHCLive r h editor ss cachedir -- staticSiteFiles
+  let master = GHCLive r h editor ss cachedir
       s      = defaultSettings
                { settingsPort = 3000
                , settingsIntercept = WS.intercept (sockets editor)

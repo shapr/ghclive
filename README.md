@@ -3,10 +3,17 @@ ghclive
 
 Google Summer of Code 2012 project, GHCi for the web
 
-Quick start
------------
-`$ cabal build && ./dist/build/ghclive/ghclive` and point your browser
-to [http://localhost:3000](http://localhost:3000). Click on 'edit'.
+Requirements
+------------
+Chrome 21.x
+Firefox 14.x
+
+Does not work with Firefox 10
+
+Quick start installation
+------------------------
+`git clone https://github.com/shapr/ghclive.git && cd ghclive && cabal build && ghclive` 
+then point your browser to [http://localhost:3000](http://localhost:3000)
 
 Prototypes
 ----------
