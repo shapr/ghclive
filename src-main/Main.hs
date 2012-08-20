@@ -322,8 +322,8 @@ getEditR = liveLayout $ do
                    <textarea #editor>
                  <form action="#">
                    <input type=submit value="Load shared document" #load>
-                 <div #editormessages>
                <div class="ui-layout-center">
+                 <div #editormessages>
                  <div #output>
                  <input type=submit value="Refresh output" #outputit>
                <div class="ui-layout-south">

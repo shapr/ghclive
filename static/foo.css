@@ -39,6 +39,7 @@ textarea, input {
 
 #editormessages {
     overflow-y: auto;
+    background-color: #ffcfcf;
 /*    visibility: hidden; */
 /*    height: 50px; */
 }
