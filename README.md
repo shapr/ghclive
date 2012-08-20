@@ -15,6 +15,21 @@ Quick start installation
 `git clone https://github.com/shapr/ghclive.git && cd ghclive && cabal build && ghclive` 
 then point your browser to [http://localhost:3000](http://localhost:3000)
 
+Here's some source code to paste into the editor buffer:
+```haskell
+import Diagrams.Prelude
+import Prelude
+import Network.Web.GHCLive.Display
+
+hilbert = iterate expand mempty where
+  expand t = alignBL $ hcat [u, hrule 1, reflectX u] where
+             u = vcat [t, vrule 1, rotateBy (3/4) t]
+
+ex = pad 1.1 . centerXY . lw 0.05 $ hilbert!!5
+```
+
+then type ex in the Haskell expression buffer and hit enter!
+
 Prototypes
 ----------
 The prototypes subdirectory contains several quick hacks demonstrating various concepts.
