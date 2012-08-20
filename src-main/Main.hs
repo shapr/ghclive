@@ -301,7 +301,9 @@ getEditR = liveLayout $ do
              addStylesheet (StaticR codemirror_lib_codemirror_css)
              addStylesheet (StaticR foo_css)
              addScript     (StaticR jquery_ui_core_js)
+             addScript     (StaticR jquery_ui_widget_js)
              addScript     (StaticR jquery_ui_draggable_js)
+             addScript     (StaticR jquery_ui_button_js)
              addStylesheet (StaticR jquery_ui_1_8_23_custom_css)
              addScript     (StaticR jquery_effects_core_js)
              addScript     (StaticR jquery_effects_drop_js)
@@ -318,13 +320,13 @@ getEditR = liveLayout $ do
                       |]
              [whamlet|$newline never
                <div class="ui-layout-north">
-                 <div id="editor-panel">
-                   <form action="#">
-                     <textarea #editor>
-                 <input type=submit value="Load shared document" #load>
-                 <div #editormessages>
-               <div class="ui-layout-west">
-               <div class="ui-layout-east">
+                 <div class="header">Editor
+                 <div id="editor-panels" class="content">
+                   <div class="content">
+                     <form action="#">
+                       <textarea #editor>
+                       <input type=submit value="Load shared document" #load>
+                     <div #editormessages>
                <div class="ui-layout-center">
                  <div #output>
                  <input type=submit value="Refresh output" #outputit>
@@ -333,6 +335,8 @@ getEditR = liveLayout $ do
                    <div id="eval-panel">
                      <input type=text placeholder="Enter a Haskell expression" #expr>
                      <input type=submit value="Evaluate" #evalit>
+               <div class="ui-layout-west">
+               <div class="ui-layout-east">
              |]
 
 insertAtom :: AtomId -> AtomId -> Char -> Document -> Document

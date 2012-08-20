@@ -2,7 +2,10 @@ function wsLocation() {
     return window.location.href.replace(/^([a-z]+)\:/i, "ws:");
 }
 
+var mainLayout;
+
 var ignoreChange = false;
+
 function handleChange(editor, change) {
     if(ignoreChange) { return; }
     var msgs = doc.replace(change.from, change.to, change.text);
@@ -137,19 +140,23 @@ function spacify(line) {
     return result + line.substring(i);
 }
 
-function scrollToBottom(elem) { // pass in the id of the element you want scrolled to bottom
+function scrollToBottom(elem) {
     // var elem = document.getElementById(elem);
     // elem.scrollTop = elem.scrollHeight;
-    $(elem).scrollTo( 'max', { axis:'y' } );
+    $(elem).scrollTo('max')
 }
+
 function load(success) {
     $.get('/loader', function(res) {
         if ("" + res === "Main,Helper") {
             $("#editormessages").text("");
+            $("#editor-messages").hide()
         } else if (typeof res === "string") {
             formatErrors($("#editormessages"), res);
+            $("#editor-messages").show()
         } else { // just paranoia
             $("#editormessages").text("" + res);
+            $("#editor-messages").show()
         }
         if (success) success();
     });
@@ -176,18 +183,28 @@ function outputit(){
 
 $(function () {
     // $("#tabs").tabs();
-    var myLayout;
+    $( "input:submit, button").button();
     $(document).ready(function () {
-      myLayout = $('body').layout({ applyDefaultStyles: true });
-      myLayout.hide("west")
-      myLayout.hide("east")
+      mainLayout = $('body').layout({
+          name: "main-layout"
+        , applyDefaultStyles: true
+        , west: { initHidden: true }
+        , east: { initHidden: true }
+      });
     });
-    
+
+    function mentionit() {
+      var slot = $('<div><span class="prompt">hint&gt;</span> <span class="expr">:load</span><div class="result"></div></div>');
+      $("#output").append(slot)
+      scrollToBottom('#output');
+      scrollToBottom('ui-layout-center');
+    }
 
     $("#load").click(function() {
         load();
         $("#expr").select();
         $("#expr").focus();
+        mentionit();
         return false;
     });
 

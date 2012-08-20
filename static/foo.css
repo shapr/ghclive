@@ -38,10 +38,22 @@ textarea, input {
 }
 
 #editormessages {
-    height: 50px;
     overflow-y: auto;
+    visibility: hidden;
+    height: 50px;
 }
 
 .expr {
     font-weight: bold;
+}
+
+.header {
+        background: url(ui-bg_highlight-hard_100_f9f9f9_1x100.png) 0 50% repeat-x;
+	/* background: #80ade5 url(../img/80ade5_40x100_textures_04_highlight_hard_100.png) 0 50% repeat-x; */
+	border-bottom: 1px solid #777;
+	font-weight: bold;
+	text-align: center;
+	padding: 2px 0 4px;
+	position: relative;
+	overflow: hidden;
 }
