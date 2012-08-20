@@ -323,13 +323,12 @@ getEditR = liveLayout $ do
                    <input type=submit value="Load shared document" #load>
                <div class="ui-layout-center">
                  <div #editormessages>
-                 <div #output>
-                 <input type=submit value="Refresh output" #outputit>
+                 <div #output class="ui-layout-content">
                <div class="ui-layout-south">
-                 <form action="#">
+                 <form id="evalform" action="#">
                    <div id="eval-panel">
                      <input type=text placeholder="Enter a Haskell expression" #expr>
-                     <input type=submit value="Evaluate" #evalit>
+
                <div class="ui-layout-west">
                <div class="ui-layout-east">
              |]

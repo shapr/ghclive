@@ -28,13 +28,17 @@ textarea, input {
 
 #expr {
     display: table-cell;
-    width: 90%;
+    width: 98%;
 }
 
 #evalit {
     display: table-cell;
     margin-left: 8px;
     width: 8%;
+}
+
+#load {
+    font-size: 85%;
 }
 
 #editormessages {

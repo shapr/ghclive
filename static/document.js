@@ -146,12 +146,6 @@ function posEq(pos1,pos2) {
 // replace a range { line, ch } - { line, ch } by str
 // returns modification messages
 Document.prototype.replace = function(from,to,strs) {
-  this.dump();
-  console.log("----replace[[[");
-  console.log(from);
-  console.log(to);
-  console.log(strs);
-  console.log("]]]");
   var mods  = [];
   var start = this.idbefore(from); // insert new string after this atom
   if(start == null) start = [0,0];
@@ -163,7 +157,6 @@ Document.prototype.replace = function(from,to,strs) {
   // first mark atoms as removed
   var atom = (aid != null) ? this.atoms.get(aid) : null;
   while(atom != null && !aidEq(atom.id,end) && !posEq(from,to)) {
-    console.log("removing atom: " + this.atomStr(aid));
     if(!atom.removed) {
       atom.removed = true;
       mods.push({ action: 'remove', atom: atom.id });

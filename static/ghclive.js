@@ -158,7 +158,7 @@ function load(success) {
             $("#editormessages").text("" + res);
 //            $("#editor-messages").show()
         }
-        mainLayout.sizeContent("north");
+        mainLayout.sizeContent("center");
         cm.refresh();
         if (success) success();
     });
@@ -236,7 +236,10 @@ $(function () {
         $("#expr").select();
         return false;
     }
-
+    $("#evalform").submit(function(e) {
+      e.preventDefault();
+      evalit();
+    });
     $("#evalit").click(evalit);
     $("#outputit").click(outputit);
 });
