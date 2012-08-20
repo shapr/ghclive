@@ -12,7 +12,7 @@ Does not work with Firefox 10
 
 Quick start installation
 ------------------------
-`git clone https://github.com/shapr/ghclive.git && cd ghclive && cabal build && ghclive` 
+`git clone https://github.com/shapr/ghclive.git && cd ghclive && cabal install && ghclive` 
 then point your browser to [http://localhost:3000](http://localhost:3000)
 
 Here's some source code to paste into the editor buffer:
