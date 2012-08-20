@@ -301,7 +301,6 @@ getEditR = liveLayout $ do
              addScript     (StaticR jquery_js)
              addScript     (StaticR codemirror_lib_codemirror_js)
              addScript     (StaticR codemirror_mode_haskell_haskell_js)
-             addScript     (StaticR es6_shim_js)
              addScript     (StaticR document_js)
              addStylesheet (StaticR codemirror_lib_codemirror_css)
              addStylesheet (StaticR foo_css)
