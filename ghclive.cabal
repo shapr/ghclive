@@ -5,20 +5,105 @@ name:                ghclive
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            Interactive Haskell interpreter in a browser.
 Description:
-                     ghclive is an interactive Haskell interactive in a browser.
-                     It can do most of what ghci does, with a few extra abilities.
+                     ghclive is an interactive multi-user Haskell interpreter in a browser.
+                     It mixes a pastebin with an interpreter and is designed for remote teaching.
 
 homepage:            http://github.com/shapr/ghclive/
 license:             BSD3
 license-file:        LICENSE
 author:              Shae Erisson
 maintainer:          shae@ScannedInAvian.com
-category:            Web
+category:            Web, Compilers/Interpreters, Application
 build-type:          Simple
 cabal-version:       >=1.8
+extra-source-files:  README.md
+                     cache/Helper.hs
+                     src-main/SignalHandlers.hs
+                     src-main/SeqMap.hs
+                     cache/Helper.hs
+                     src-main/Main.hs
+                     src-main/SeqMap.hs
+                     src-main/SignalHandlers.hs
+                     static/codemirror/LICENSE
+                     static/codemirror/README.md
+                     static/codemirror/index.html
+                     static/codemirror/keymap/emacs.js
+                     static/codemirror/keymap/vim.js
+                     static/codemirror/lib/codemirror.css
+                     static/codemirror/lib/codemirror.js
+                     static/codemirror/lib/util/closetag.js
+                     static/codemirror/lib/util/dialog.css
+                     static/codemirror/lib/util/dialog.js
+                     static/codemirror/lib/util/foldcode.js
+                     static/codemirror/lib/util/formatting.js
+                     static/codemirror/lib/util/javascript-hint.js
+                     static/codemirror/lib/util/loadmode.js
+                     static/codemirror/lib/util/match-highlighter.js
+                     static/codemirror/lib/util/multiplex.js
+                     static/codemirror/lib/util/overlay.js
+                     static/codemirror/lib/util/pig-hint.js
+                     static/codemirror/lib/util/runmode.js
+                     static/codemirror/lib/util/search.js
+                     static/codemirror/lib/util/searchcursor.js
+                     static/codemirror/lib/util/simple-hint.css
+                     static/codemirror/lib/util/simple-hint.js
+                     static/codemirror/lib/util/xml-hint.js
+                     static/codemirror/mode/haskell/haskell.js
+                     static/codemirror/mode/haskell/index.html
+                     static/codemirror/package.json
+                     static/codemirror/test/driver.js
+                     static/codemirror/test/index.html
+                     static/codemirror/test/mode_test.css
+                     static/codemirror/test/mode_test.js
+                     static/codemirror/test/test.js
+                     static/codemirror/theme/ambiance.css
+                     static/codemirror/theme/blackboard.css
+                     static/codemirror/theme/cobalt.css
+                     static/codemirror/theme/eclipse.css
+                     static/codemirror/theme/elegant.css
+                     static/codemirror/theme/erlang-dark.css
+                     static/codemirror/theme/lesser-dark.css
+                     static/codemirror/theme/monokai.css
+                     static/codemirror/theme/neat.css
+                     static/codemirror/theme/night.css
+                     static/codemirror/theme/rubyblue.css
+                     static/codemirror/theme/vibrant-ink.css
+                     static/codemirror/theme/xq-dark.css
+                     static/document.js
+                     static/foo.css
+                     static/ghclive.js
+                     static/grippie.png
+                     static/images/ui-bg_flat_65_ffffff_40x100.png
+                     static/images/ui-bg_glass_40_111111_1x400.png
+                     static/images/ui-bg_glass_55_1c1c1c_1x400.png
+                     static/images/ui-bg_highlight-hard_100_f9f9f9_1x100.png
+                     static/images/ui-bg_highlight-hard_40_aaaaaa_1x100.png
+                     static/images/ui-bg_highlight-soft_50_aaaaaa_1x100.png
+                     static/images/ui-bg_inset-hard_45_cd0a0a_1x100.png
+                     static/images/ui-bg_inset-hard_55_ffeb80_1x100.png
+                     static/images/ui-icons_222222_256x240.png
+                     static/images/ui-icons_4ca300_256x240.png
+                     static/images/ui-icons_bbbbbb_256x240.png
+                     static/images/ui-icons_ededed_256x240.png
+                     static/images/ui-icons_ffcf29_256x240.png
+                     static/images/ui-icons_ffffff_256x240.png
+                     static/jquery-ui-1.8.23.custom.css
+                     static/jquery-ui-1.8.23.custom.min.js
+                     static/jquery.js
+                     static/jquery.layout-latest.js
+                     static/jquery.scrollTo.js
+                     static/layout/changelog.txt
+                     static/layout/example.html
+                     static/layout/jquery.js
+                     static/layout/jquery.layout.js
+                     static/layout/jquery.layout.min.js
+                     static/layout/jquery.ui.all.js
+                     static/layout/nested.html
+                     static/layout/simple.html
+
 Library
   build-depends:
     aeson > 0.6 && < 0.7,
@@ -65,3 +150,6 @@ executable ghclive
     base >= 4 && < 5
 
   hs-source-dirs:  src-main
+source-repository    head
+  type:              git
+  location:          http://github.com/shapr/ghclive
