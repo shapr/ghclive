@@ -211,7 +211,7 @@ getEvalR = do
              jsonToRepJson jsres
 
 interpretHint :: (Typeable a, MonadInterpreter m) => String -> m a
-interpretHint expr = set [ languageExtensions := (ExtendedDefaultRules:glasgowExtensions) ] >> interpret expr as
+interpretHint expr = set [ languageExtensions := (NoMonomorphismRestriction:ExtendedDefaultRules:glasgowExtensions) ] >> interpret expr as
 
 moduleHint :: MonadInterpreter m => String -> FilePath -> m [ModuleName]
 moduleHint ms cachedir = do

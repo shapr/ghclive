@@ -118,7 +118,7 @@ renderMyDiagramToSvg size dia =
 instance Display DisplayResult where
   display d = d
 
-instance (a ~ D.SVG, b ~ D.R2) => Display (D.Diagram a b) where
+instance (a ~ D.SVG, b ~ D.R2, c ~ Any) => Display (D.QDiagram a b c) where
   display     = svg . renderMyDiagramToSvg 150
   displayList = displayListOf (svg . renderMyDiagramToSvg 75)
 
@@ -162,5 +162,9 @@ instance Display () where display () = displayString "()"
 instance Display a => Display (Maybe a)
 instance (Display a, Display b) => Display (Either a b)
 
+-- orphans
 instance Show B.Markup where
   show = TL.unpack . renderHtml
+
+instance Show (D.QDiagram b v m) where
+  showsPrec _ _ = showString "<diagram>"
