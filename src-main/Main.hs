@@ -297,9 +297,17 @@ getEditR = liveLayout $ do
              addScript     (StaticR codemirror_mode_haskell_haskell_js)
              addScript     (StaticR es6_shim_js)
              addScript     (StaticR document_js)
-             -- addScript     (StaticR jquery_infieldlabel_js)
              addStylesheet (StaticR codemirror_lib_codemirror_css)
              addStylesheet (StaticR foo_css)
+             addScript     (StaticR jquery_ui_core_js)
+             addScript     (StaticR jquery_ui_draggable_js)
+             addStylesheet (StaticR jquery_ui_1_8_23_custom_css)
+             addScript     (StaticR jquery_effects_core_js)
+             addScript     (StaticR jquery_effects_drop_js)
+             addScript     (StaticR jquery_effects_scale_js)
+             addScript     (StaticR jquery_effects_slide_js)
+             addScript     (StaticR jquery_layout_latest_js)
+             addScript     (StaticR jquery_scrollTo_js)
              addScript     (StaticR ghclive_js)
              toWidget [lucius|
                          #editor {
@@ -308,17 +316,22 @@ getEditR = liveLayout $ do
                          }
                       |]
              [whamlet|
-               <h1>GHC Live
-               <form action="#">
-                 <textarea #editor>
+               <div class="ui-layout-north">
+                 <div id="editor-panel">
+                   <form action="#">
+                     <textarea #editor>
+                 <input type=submit value="Load shared document" #load>
                  <div #editormessages>
-                 <input type=submit value="Load from editor" #load>
-               <form action="#">
-                 <textarea placeholder="Enter a Haskell expression" #expr>
-                 <input type=submit value="Evaluate" #evalit>
-                 <br>
+               <div class="ui-layout-west">
+               <div class="ui-layout-east">
+               <div class="ui-layout-center">
+                 <div #output>
                  <input type=submit value="Refresh output" #outputit>
-               <div #output>
+               <div class="ui-layout-south">
+                 <form action="#">
+                   <div id="eval-panel">
+                     <input type=text placeholder="Enter a Haskell expression" #expr>
+                     <input type=submit value="Evaluate" #evalit>
              |]
 
 insertAtom :: AtomId -> AtomId -> Char -> Document -> Document
