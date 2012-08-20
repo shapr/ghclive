@@ -11,6 +11,7 @@
 module Main where
 import           Control.Monad.Trans
 import qualified Data.ByteString                as BS
+import           Data.FileEmbed
 import           Data.Maybe                     (fromMaybe, isJust, isNothing)
 import           Data.Monoid
 import qualified Data.Text.Lazy                 as T
@@ -57,8 +58,6 @@ import           Prelude
 import qualified SeqMap                         as SM
 import           SignalHandlers
 
-cachedir = "cache/"
-
 type Hint = Run (InterpreterT IO)
 data Run m = Run { vRequest :: MVar (m ()) }
 
@@ -71,6 +70,7 @@ data GHCLive = GHCLive
                 , hint      :: Hint
                 , editor    :: Editor
                 , getStatic :: Static
+                , tmpdir    :: FilePath
                 }
 
 data Editor = Editor
@@ -154,8 +154,9 @@ main :: IO ()
 main = do
   -- filesystem setup
   tmp <- getTemporaryDirectory
-  createDirectoryIfMissing False (tmp ++ "/ghclive/")
-  -- XXX save Helper.hs to tmpdir here!
+  let cachedir = (tmp ++ "/ghclive/")
+  createDirectoryIfMissing False cachedir
+  BS.writeFile (cachedir ++ "Helper.hs") helperFile
   -- hint setup
   r  <- newMVar ([] :: [J.Value])
   h  <- newHint
@@ -164,7 +165,7 @@ main = do
   d  <- newMVar (emptyDoc, M.empty)
   u  <- newMVar (ClientId 0)
   let editor = Editor d u
-  let master = GHCLive r h editor ss -- staticSiteFiles
+  let master = GHCLive r h editor ss cachedir -- staticSiteFiles
       s      = defaultSettings
                { settingsPort = 3000
                , settingsIntercept = WS.intercept (sockets editor)
@@ -175,7 +176,7 @@ main = do
 getLoaderR = do
   y <- getYesod
   cs <- liftIO $ readMVar (doc $ editor y)
-  t <- liftIO . performHint (hint y) $ moduleHint (doc2string $ fst cs)
+  t <- liftIO . performHint (hint y) $ moduleHint (doc2string $ fst cs) (tmpdir y)
   case t of
     Left error -> jsonToRepJson $ cleanShow error
     Right displayres -> jsonToRepJson displayres
@@ -213,12 +214,14 @@ getEvalR = do
 interpretHint :: (Typeable a, MonadInterpreter m) => String -> m a
 interpretHint expr = set [ languageExtensions := (ExtendedDefaultRules:glasgowExtensions) ] >> interpret expr as
 
-moduleHint :: MonadInterpreter m => String -> m [ModuleName]
-moduleHint ms = do
+moduleHint :: MonadInterpreter m => String -> FilePath -> m [ModuleName]
+moduleHint ms cachedir = do
   -- save the file
-  fname <- liftIO $ cacheFile ms
-  let allfiles = ["Helper.hs", fname]
+  liftIO . putStrLn $ "calling cachedir with " ++ cachedir ++ " and " ++ (take 50 ms)
+  liftIO $ cacheFile cachedir ms
+  let allfiles = ["Helper.hs", "Main.hs"]
   reset
+  liftIO $ putStrLn $ "will be loading " ++ (show $ map (cachedir ++) allfiles)
   loadModules $ map (cachedir ++) allfiles
   ms <- getLoadedModules
   setTopLevelModules ms
@@ -271,10 +274,11 @@ cleanShow ie = case ie of
                  NotAllowed e -> "NotAllowed\n" ++ e
                  GhcException e -> "GhcException\n" ++ e
 
-cacheFile f = do
+cacheFile cachedir f = do
+  putStrLn $ "cachedir is " ++ cachedir
+  putStrLn $ "text is " ++ (take 50 f)
   writeFile (cachedir ++ "Main.hs") f
   return "Main.hs"
-
 
 liveLayout :: Widget -> Handler RepHtml
 liveLayout w = do
@@ -289,6 +293,8 @@ liveLayout w = do
           ^{pageBody p}
     |]
 
+helperFile :: BS.ByteString
+helperFile = $(embedFile "cache/Helper.hs")
 
 {-- shared editor --}
 getEditR :: Handler RepHtml
