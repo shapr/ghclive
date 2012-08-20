@@ -138,8 +138,9 @@ function spacify(line) {
 }
 
 function scrollToBottom(elem) { // pass in the id of the element you want scrolled to bottom
-    var elem = document.getElementById(elem);
-    elem.scrollTop = elem.scrollHeight;
+    // var elem = document.getElementById(elem);
+    // elem.scrollTop = elem.scrollHeight;
+    $(elem).scrollTo( 'max', { axis:'y' } );
 }
 function load(success) {
     $.get('/loader', function(res) {
@@ -165,13 +166,23 @@ function outputit(){
             for (var i = 0; i < results.length; i++) {
                 $("#output").append(formatResult(results[i]));
             }
-            scrollToBottom('output');
+            scrollToBottom('#output');
+            scrollToBottom('ui-layout-center');
         }
     }); // end ajax call
     return false;
 }
 
+
 $(function () {
+    // $("#tabs").tabs();
+    var myLayout;
+    $(document).ready(function () {
+      myLayout = $('body').layout({ applyDefaultStyles: true });
+      myLayout.hide("west")
+      myLayout.hide("east")
+    });
+    
 
     $("#load").click(function() {
         load();
@@ -191,12 +202,13 @@ $(function () {
                 data: {expr: expr},
                 success: function(res) {
                     // XXX This is probably pointless now that each evaluation
-                    // causes the server to send out a refreshoutput message. 
+                    // causes the server to send out a refreshoutput message.
                     // But maybe it still gets you a result display with lower
                     // latency (one less round trip, and not rewriting the whole
                     // output history) so I'm not nuking this yet.
                     fillInResultSlot(slot, res);
-                    scrollToBottom('output');
+                    scrollToBottom('#output');
+                    scrollToBottom('ui-layout-center');
                 }
             });
         });
@@ -204,8 +216,6 @@ $(function () {
         return false;
     }
 
-
     $("#evalit").click(evalit);
-
     $("#outputit").click(outputit);
 });
