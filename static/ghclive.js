@@ -176,7 +176,7 @@ function outputit(){
                 $("#output").append(formatResult(results[i]));
             }
             scrollToBottom('#output');
-            scrollToBottom('ui-layout-center');
+            scrollToBottom('.ui-layout-center');
         }
     }); // end ajax call
     return false;
@@ -201,7 +201,7 @@ $(function () {
       var slot = $('<div><span class="prompt">hint&gt;</span> <span class="expr">:load</span><div class="result"></div></div>');
       $("#output").append(slot)
       scrollToBottom('#output');
-      scrollToBottom('ui-layout-center');
+      scrollToBottom('.ui-layout-center');
     }
 
     $("#load").click(function() {
@@ -229,7 +229,7 @@ $(function () {
                     // output history) so I'm not nuking this yet.
                     fillInResultSlot(slot, res);
                     scrollToBottom('#output');
-                    scrollToBottom('ui-layout-center');
+                    scrollToBottom('.ui-layout-center');
                 }
             });
         });
