@@ -317,7 +317,6 @@ getEditR = liveLayout $ do
                       |]
              [whamlet|$newline never
                <div id="editor-pane" class="ui-layout-north">
-                 <div>Editor
                  <div class="ui-layout-content">
                    <textarea #editor>
                  <form action="#">
