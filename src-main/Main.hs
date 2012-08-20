@@ -16,7 +16,6 @@ import           Data.Maybe                     (fromMaybe, isJust, isNothing)
 import           Data.Monoid
 import qualified Data.Text.Lazy                 as T
 import           Language.Haskell.Interpreter   hiding (get)
-import           Network.Curl.Download
 import           Network.Wai.Handler.Warp       (Settings(..), defaultSettings, runSettings)
 import           System.Directory               (createDirectoryIfMissing, getTemporaryDirectory)
 import qualified Text.Blaze.Html5               as H
