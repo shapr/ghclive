@@ -147,7 +147,8 @@ mkYesod "GHCLive" [parseRoutes|
 /results ResultsR GET
 |]
 
-instance Yesod GHCLive
+instance Yesod GHCLive where
+  makeSessionBackend _ = return Nothing
 
 main :: IO ()
 main = do
