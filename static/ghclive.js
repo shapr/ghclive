@@ -132,10 +132,8 @@ function formatErrors(node, message) {
 // Change leading spaces into nbsp entities.
 function spacify(line) {
     var i;
-    for (i = 0; i < line.length && line[i] === " "; ++i)
-        ;
     var result = "";
-    for (; 0 < i; --i)
+    for (i = 0; i < line.length && line[i] === " "; ++i)
         result += "&nbsp;";
     return result + line.substring(i);
 }
@@ -176,7 +174,7 @@ function outputit(){
                 $("#output").append(formatResult(results[i]));
             }
             scrollToBottom('#output');
-            scrollToBottom('ui-layout-center');
+            scrollToBottom('.ui-layout-center');
         }
     }); // end ajax call
     return false;
@@ -201,7 +199,7 @@ $(function () {
       var slot = $('<div><span class="prompt">hint&gt;</span> <span class="expr">:load</span><div class="result"></div></div>');
       $("#output").append(slot)
       scrollToBottom('#output');
-      scrollToBottom('ui-layout-center');
+      scrollToBottom('.ui-layout-center');
     }
 
     $("#load").click(function() {
@@ -229,7 +227,7 @@ $(function () {
                     // output history) so I'm not nuking this yet.
                     fillInResultSlot(slot, res);
                     scrollToBottom('#output');
-                    scrollToBottom('ui-layout-center');
+                    scrollToBottom('.ui-layout-center');
                 }
             });
         });
