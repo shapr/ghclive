@@ -132,10 +132,8 @@ function formatErrors(node, message) {
 // Change leading spaces into nbsp entities.
 function spacify(line) {
     var i;
-    for (i = 0; i < line.length && line[i] === " "; ++i)
-        ;
     var result = "";
-    for (; 0 < i; --i)
+    for (i = 0; i < line.length && line[i] === " "; ++i)
         result += "&nbsp;";
     return result + line.substring(i);
 }
