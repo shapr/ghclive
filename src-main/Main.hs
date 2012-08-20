@@ -317,7 +317,6 @@ getEditR = liveLayout $ do
                       |]
              [whamlet|$newline never
                <div id="editor-pane" class="ui-layout-north">
-                 <div.header>GHCLive - a shapr production - written and directed by shapr - starring shapr
                  <div class="ui-layout-content">
                    <textarea #editor>
                  <form action="#">
