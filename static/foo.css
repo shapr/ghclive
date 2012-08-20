@@ -39,8 +39,8 @@ textarea, input {
 
 #editormessages {
     overflow-y: auto;
-    visibility: hidden;
-    height: 50px;
+/*    visibility: hidden; */
+/*    height: 50px; */
 }
 
 .expr {
@@ -56,4 +56,17 @@ textarea, input {
 	padding: 2px 0 4px;
 	position: relative;
 	overflow: hidden;
+}
+
+.CodeMirror-wrap {
+        position: absolute;
+        bottom: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+}
+
+
+.CodeMirror-scroll {
+        height: 100% !important; /* override CodeMirror default */
 }

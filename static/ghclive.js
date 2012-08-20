@@ -150,14 +150,16 @@ function load(success) {
     $.get('/loader', function(res) {
         if ("" + res === "Main,Helper") {
             $("#editormessages").text("");
-            $("#editor-messages").hide()
+//            $("#editor-messages").hide()
         } else if (typeof res === "string") {
             formatErrors($("#editormessages"), res);
-            $("#editor-messages").show()
+//            $("#editor-messages").show()
         } else { // just paranoia
             $("#editormessages").text("" + res);
-            $("#editor-messages").show()
+//            $("#editor-messages").show()
         }
+        mainLayout.sizeContent("north");
+        cm.refresh();
         if (success) success();
     });
 }
@@ -190,6 +192,8 @@ $(function () {
         , applyDefaultStyles: true
         , west: { initHidden: true }
         , east: { initHidden: true }
+        , north: { size: 300 }
+        , north__onresize: function() { cm.refresh(); }
       });
     });
 
