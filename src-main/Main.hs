@@ -175,7 +175,6 @@ main = do
 getLoaderR = do
   y <- getYesod
   cs <- liftIO $ readMVar (doc $ editor y)
-  liftIO . putStrLn $ "doc2string result is " ++ doc2string (fst cs )
   t <- liftIO . performHint (hint y) $ moduleHint (doc2string $ fst cs)
   case t of
     Left error -> jsonToRepJson $ cleanShow error
@@ -442,7 +441,6 @@ editSocket e = do
   forever $ do
     (OpBlock acts) <- receiveJson
     liftIO $ applyOps e acts
-    liftIO $ mapM print acts
     return ()
   liftIO $ removeClient e client
   return ()
