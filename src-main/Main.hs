@@ -328,7 +328,6 @@ getEditR = liveLayout $ do
                  <form id="evalform" action="#">
                    <div id="eval-panel">
                      <input type=text placeholder="Enter a Haskell expression" #expr>
-
                <div class="ui-layout-west">
                <div class="ui-layout-east">
              |]

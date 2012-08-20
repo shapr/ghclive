@@ -21,20 +21,8 @@ textarea, input {
     overflow-y: auto;
 }
 
-#eval-panel {
-    display: table;
-    width: 100%
-}
-
 #expr {
-    display: table-cell;
-    width: 98%;
-}
-
-#evalit {
-    display: table-cell;
-    margin-left: 8px;
-    width: 8%;
+    width: 100%;
 }
 
 #load {
@@ -47,6 +35,12 @@ textarea, input {
     font-family: monospace;
     font-size: 13px;
 }
+
+#eval-panel {
+    text-align: center;
+    width: 100%
+}
+
 
 .expr {
     font-weight: bold;
