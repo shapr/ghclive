@@ -41,3 +41,7 @@ textarea, input {
     height: 50px;
     overflow-y: auto;
 }
+
+.expr {
+    font-weight: bold;
+}
